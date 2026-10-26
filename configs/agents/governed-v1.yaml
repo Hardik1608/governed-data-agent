@@ -1,0 +1,36 @@
+# Agent configuration v1: prompt + tools + model + budgets. Registered in MLflow and promoted
+# by the release gate (`data-agent gate`). The model *name* is part of the configuration; the
+# server URL and key come from the environment (DATA_AGENT_LLM_BASE_URL / _API_KEY), so the
+# same configuration runs against a local vLLM, Ollama or an API gateway.
+name: governed-agent
+version: "1"
+description: Planner + tool loop (6 tools) + traceability check; LangGraph, read-only DuckDB replicas.
+prompt: agent_v1.md
+plan_prompt: plan_v1.md
+use_planner: true
+tools: [search_catalog, describe_model, get_metric, run_sql, make_chart, ask_user]
+retrieval_k: 8
+model:
+  # The shared local server's alias for Qwen3.5-9B int4 (vLLM). Sampling follows the Qwen
+  # model card for non-thinking mode (greedy decoding is discouraged: it can loop). With
+  # sampling on, k trials of the same question differ, which is what pass^k measures.
+  name: local-agent
+  temperature: 0.7
+  top_p: 0.8
+  top_k: 20
+  max_tokens: 1024
+  timeout_s: 180
+  max_retries: 6
+  max_concurrency: 4
+  max_context_tokens: 12000
+budgets:
+  max_llm_calls: 12
+  max_total_tokens: 80000
+  max_wall_s: 300
+  max_check_retries: 2
+  sql:
+    max_rows: 200
+    timeout_s: 15
+    est_rows_approval: 1.0e9   # largest plan operator; see reports/budget/calibration.md
+    est_rows_reject: 1.0e11
+    max_queries: 12

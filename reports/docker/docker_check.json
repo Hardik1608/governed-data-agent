@@ -1,0 +1,22 @@
+{
+ "date": "2026-10-15",
+ "host": "RTX 3060 box (Ubuntu), shared; no GPU used",
+ "tools": {
+  "docker": "29.7.2",
+  "buildx": "0.36.1",
+  "compose": "5.5.0"
+ },
+ "script": "scripts/docker_check.sh",
+ "builder": "private buildx builder, docker-container driver, memory=2g; removed after the run",
+ "results": {
+  "build": "ok in 89 s, image 1274967636 bytes",
+  "uid": "10001 (expected 10001)",
+  "cli": "ok",
+  "readyz": "{\"ready\":true,\"roles\":[\"analyst\",\"finance\",\"viewer\"],\"agent\":\"governed-agent\",\"agent_version\":\"1\"}",
+  "healthz": "{\"status\":\"ok\",\"version\":\"0.1.0\"}",
+  "ai-disclosure header": "x-ai-generated: true",
+  "docker healthcheck": "healthy",
+  "compose config": "ok",
+  "promtool rules": "ok"
+ }
+}

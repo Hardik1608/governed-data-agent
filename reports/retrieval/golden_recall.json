@@ -1,0 +1,22 @@
+{
+ "questions": 110,
+ "documents": 104,
+ "embedder": "nomic-embed-text",
+ "results": {
+  "bm25": {
+   "recall@3": 0.7545,
+   "recall@5": 0.8455,
+   "recall@8": 0.8727
+  },
+  "embedding": {
+   "recall@3": 0.7364,
+   "recall@5": 0.8,
+   "recall@8": 0.8273
+  },
+  "hybrid": {
+   "recall@3": 0.7909,
+   "recall@5": 0.8091,
+   "recall@8": 0.8364
+  }
+ }
+}

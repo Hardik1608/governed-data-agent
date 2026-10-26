@@ -1,0 +1,821 @@
+# Golden set v1 - single-metric questions (60).
+#
+# Each item: one business question with an unambiguous metric, period and scope.
+#   gold_sql : hand-written SQL, run on the analyst replica (bare model names, the agent's view)
+#   alt_sql  : a second, independent formulation (different tables or a different path:
+#              mart vs fact, fct_orders vs fct_order_lines, joins vs date ranges, window vs
+#              aggregate). It must return the same named columns and agree with gold_sql.
+#   answer   : which result cells the agent's answer must state. `values` are numbers
+#              (graded within 0.5% relative); `entities` are strings (graded by normalised
+#              substring; `any_of` accepts several columns, e.g. stock code or description).
+# Expected values are not typed here: `data-agent golden freeze` runs both queries, checks
+# that they agree and writes golden/v1/expected.json. tests/test_golden.py re-runs them.
+# Money is GBP. "Net revenue" = certified net merchandise revenue (configs/metrics.yaml).
+category: single_metric
+items:
+  - id: sm-001
+    question: What was net merchandise revenue in November 2011?
+    tags: [revenue, monthly]
+    gold_sql: |
+      SELECT net_merchandise_revenue AS net_revenue
+      FROM mart_revenue_monthly WHERE revenue_month = DATE '2011-11-01'
+    alt_sql: |
+      SELECT SUM(f.line_revenue) AS net_revenue
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation')
+        AND f.invoice_ts >= TIMESTAMP '2011-11-01' AND f.invoice_ts < TIMESTAMP '2011-12-01'
+    answer: {values: [net_revenue]}
+
+  - id: sm-002
+    question: What was the total net merchandise revenue for calendar year 2010?
+    tags: [revenue, yearly]
+    gold_sql: |
+      SELECT SUM(net_merchandise_revenue) AS net_revenue
+      FROM mart_revenue_monthly WHERE year(revenue_month) = 2010
+    alt_sql: |
+      SELECT SUM(f.line_revenue) AS net_revenue
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      JOIN dim_date d ON f.date_key = d.date_key
+      WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation') AND d.calendar_year = 2010
+    answer: {values: [net_revenue]}
+
+  - id: sm-003
+    question: What was net merchandise revenue in 2011? The data for 2011 runs until 9 December.
+    tags: [revenue, yearly, partial-period]
+    gold_sql: |
+      SELECT SUM(f.line_revenue) AS net_revenue
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation')
+        AND f.invoice_ts >= TIMESTAMP '2011-01-01' AND f.invoice_ts < TIMESTAMP '2012-01-01'
+    alt_sql: |
+      SELECT ytd_net_revenue AS net_revenue
+      FROM mart_revenue_monthly WHERE revenue_month = DATE '2011-12-01'
+    answer: {values: [net_revenue]}
+
+  - id: sm-004
+    question: What was net merchandise revenue in the third quarter (July to September) of 2011?
+    tags: [revenue, quarterly]
+    gold_sql: |
+      SELECT SUM(f.line_revenue) AS net_revenue
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      JOIN dim_date d ON f.date_key = d.date_key
+      WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation')
+        AND d.calendar_year = 2011 AND d.calendar_quarter = 3
+    alt_sql: |
+      SELECT SUM(net_merchandise_revenue) AS net_revenue FROM mart_revenue_monthly
+      WHERE revenue_month BETWEEN DATE '2011-07-01' AND DATE '2011-09-01'
+    answer: {values: [net_revenue]}
+
+  - id: sm-005
+    question: What were gross merchandise sales (before cancellations) in December 2010?
+    tags: [revenue, gross]
+    gold_sql: |
+      SELECT gross_merchandise_sales AS gross_sales
+      FROM mart_revenue_monthly WHERE revenue_month = DATE '2010-12-01'
+    alt_sql: |
+      SELECT SUM(f.line_revenue) AS gross_sales
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      WHERE p.is_merchandise AND f.line_type = 'sale'
+        AND f.invoice_ts >= TIMESTAMP '2010-12-01' AND f.invoice_ts < TIMESTAMP '2011-01-01'
+    answer: {values: [gross_sales]}
+
+  - id: sm-006
+    question: How much merchandise value was cancelled in 2011 in total?
+    tags: [cancellations]
+    gold_sql: |
+      SELECT SUM(cancelled_merchandise) AS cancelled
+      FROM mart_revenue_monthly WHERE year(revenue_month) = 2011
+    alt_sql: |
+      SELECT SUM(f.line_revenue) AS cancelled
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      WHERE p.is_merchandise AND f.line_type = 'cancellation' AND year(f.invoice_ts) = 2011
+    answer: {values: [cancelled]}
+
+  - id: sm-007
+    question: What was the total net amount across all invoice lines in 2010, including postage, fees and manual adjustments?
+    tags: [total-net-amount]
+    gold_sql: |
+      SELECT SUM(total_net_amount) AS total_net_amount
+      FROM mart_revenue_monthly WHERE year(revenue_month) = 2010
+    alt_sql: |
+      SELECT SUM(line_revenue) AS total_net_amount FROM fct_order_lines
+      WHERE invoice_ts >= TIMESTAMP '2010-01-01' AND invoice_ts < TIMESTAMP '2011-01-01'
+    answer: {values: [total_net_amount]}
+
+  - id: sm-008
+    question: What was the net amount of non-merchandise lines (postage, fees, adjustments and similar) in 2011?
+    tags: [non-merchandise]
+    gold_sql: |
+      SELECT SUM(non_merchandise_amount) AS non_merchandise
+      FROM mart_revenue_monthly WHERE year(revenue_month) = 2011
+    alt_sql: |
+      SELECT SUM(f.line_revenue) AS non_merchandise
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      WHERE NOT p.is_merchandise AND year(f.invoice_ts) = 2011
+    answer: {values: [non_merchandise]}
+
+  - id: sm-009
+    question: What was net merchandise revenue from customers in France in 2011?
+    tags: [revenue, country]
+    gold_sql: |
+      SELECT SUM(f.line_revenue) AS net_revenue
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      JOIN dim_country c ON f.country_key = c.country_key
+      WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation')
+        AND c.country_name = 'France' AND year(f.invoice_ts) = 2011
+    alt_sql: |
+      SELECT SUM(o.merchandise_revenue) AS net_revenue
+      FROM fct_orders o JOIN dim_country c ON o.country_key = c.country_key
+      WHERE o.invoice_type IN ('sale', 'cancellation') AND c.country_name = 'France'
+        AND o.invoice_ts >= TIMESTAMP '2011-01-01' AND o.invoice_ts < TIMESTAMP '2012-01-01'
+    answer: {values: [net_revenue]}
+
+  - id: sm-010
+    question: What was net merchandise revenue from Germany in the fourth quarter of 2010?
+    tags: [revenue, country, quarterly]
+    gold_sql: |
+      SELECT SUM(f.line_revenue) AS net_revenue
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      JOIN dim_country c ON f.country_key = c.country_key JOIN dim_date d ON f.date_key = d.date_key
+      WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation')
+        AND c.country_name = 'Germany' AND d.calendar_year = 2010 AND d.calendar_quarter = 4
+    alt_sql: |
+      SELECT SUM(o.merchandise_revenue) AS net_revenue
+      FROM fct_orders o JOIN dim_country c ON o.country_key = c.country_key
+      WHERE o.invoice_type IN ('sale', 'cancellation') AND c.country_name = 'Germany'
+        AND o.invoice_ts >= TIMESTAMP '2010-10-01' AND o.invoice_ts < TIMESTAMP '2011-01-01'
+    answer: {values: [net_revenue]}
+
+  - id: sm-011
+    question: What was net merchandise revenue from the Nordics region in 2011?
+    tags: [revenue, region]
+    gold_sql: |
+      SELECT SUM(f.line_revenue) AS net_revenue
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      JOIN dim_country c ON f.country_key = c.country_key
+      WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation')
+        AND c.region = 'Nordics' AND year(f.invoice_ts) = 2011
+    alt_sql: |
+      SELECT SUM(o.merchandise_revenue) AS net_revenue FROM fct_orders o
+      WHERE o.invoice_type IN ('sale', 'cancellation') AND year(o.invoice_ts) = 2011
+        AND o.country_key IN (SELECT country_key FROM dim_country WHERE region = 'Nordics')
+    answer: {values: [net_revenue]}
+
+  - id: sm-012
+    question: What share of 2011 net merchandise revenue came from the United Kingdom?
+    tags: [revenue, share, country]
+    gold_sql: |
+      SELECT SUM(CASE WHEN c.country_name = 'United Kingdom' THEN f.line_revenue ELSE 0 END)
+             / SUM(f.line_revenue) AS uk_share
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      JOIN dim_country c ON f.country_key = c.country_key
+      WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation') AND year(f.invoice_ts) = 2011
+    alt_sql: |
+      WITH uk AS (
+        SELECT SUM(o.merchandise_revenue) AS v FROM fct_orders o
+        JOIN dim_country c ON o.country_key = c.country_key
+        WHERE o.invoice_type IN ('sale', 'cancellation') AND c.is_domestic_market
+          AND year(o.invoice_ts) = 2011),
+      total AS (SELECT SUM(net_merchandise_revenue) AS v FROM mart_revenue_monthly WHERE year(revenue_month) = 2011)
+      SELECT uk.v / total.v AS uk_share FROM uk, total
+    answer: {values: [uk_share]}
+
+  - id: sm-013
+    question: What was net merchandise revenue on Sundays in 2011?
+    tags: [revenue, weekday]
+    gold_sql: |
+      SELECT SUM(f.line_revenue) AS net_revenue
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      JOIN dim_date d ON f.date_key = d.date_key
+      WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation')
+        AND d.calendar_year = 2011 AND d.day_name = 'Sunday'
+    alt_sql: |
+      SELECT SUM(f.line_revenue) AS net_revenue
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation')
+        AND year(f.invoice_ts) = 2011 AND isodow(f.invoice_ts) = 7
+    answer: {values: [net_revenue]}
+
+  - id: sm-014
+    question: How much net merchandise revenue came from guest checkouts (orders without a customer account) in 2011?
+    tags: [revenue, guests]
+    gold_sql: |
+      SELECT SUM(f.line_revenue) AS guest_revenue
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation')
+        AND f.customer_id IS NULL AND year(f.invoice_ts) = 2011
+    alt_sql: |
+      SELECT SUM(o.merchandise_revenue) AS guest_revenue FROM fct_orders o
+      WHERE o.invoice_type IN ('sale', 'cancellation') AND o.customer_sk = '-1'
+        AND o.invoice_ts >= TIMESTAMP '2011-01-01' AND o.invoice_ts < TIMESTAMP '2012-01-01'
+    answer: {values: [guest_revenue]}
+
+  - id: sm-015
+    question: How much net merchandise revenue did customers generate in 2011 while they were in the platinum loyalty tier (tier at the time of the sale)?
+    tags: [revenue, scd2, tier]
+    gold_sql: |
+      SELECT SUM(f.line_revenue) AS platinum_revenue
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      JOIN dim_customer c ON f.customer_sk = c.customer_sk
+      WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation')
+        AND c.loyalty_tier = 'platinum' AND year(f.invoice_ts) = 2011
+    alt_sql: |
+      SELECT SUM(f.line_revenue) AS platinum_revenue
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      JOIN dim_customer c ON f.customer_id = c.customer_id
+        AND f.invoice_ts >= c.valid_from AND f.invoice_ts < c.valid_to
+      WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation')
+        AND c.loyalty_tier = 'platinum' AND year(f.invoice_ts) = 2011
+    answer: {values: [platinum_revenue]}
+
+  - id: sm-016
+    question: How much 2011 net merchandise revenue came from customers whose current loyalty tier is gold?
+    tags: [revenue, scd2, tier]
+    gold_sql: |
+      SELECT SUM(f.line_revenue) AS revenue
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      JOIN dim_customer c ON f.customer_id = c.customer_id AND c.is_current
+      WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation')
+        AND c.loyalty_tier = 'gold' AND year(f.invoice_ts) = 2011
+    alt_sql: |
+      SELECT SUM(f.line_revenue) AS revenue
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation') AND year(f.invoice_ts) = 2011
+        AND f.customer_id IN (SELECT customer_id FROM dim_customer
+                              WHERE valid_to = TIMESTAMP '9999-12-31' AND loyalty_tier = 'gold')
+    answer: {values: [revenue]}
+
+  - id: sm-017
+    question: How many orders (sale invoices) were placed in November 2011?
+    tags: [orders]
+    gold_sql: |
+      SELECT n_orders AS orders FROM mart_revenue_monthly WHERE revenue_month = DATE '2011-11-01'
+    alt_sql: |
+      SELECT COUNT(*) AS orders FROM fct_orders
+      WHERE invoice_type = 'sale' AND invoice_ts >= TIMESTAMP '2011-11-01' AND invoice_ts < TIMESTAMP '2011-12-01'
+    answer: {values: [orders]}
+
+  - id: sm-018
+    question: How many orders (sale invoices) were placed in 2010?
+    tags: [orders]
+    gold_sql: |
+      SELECT COUNT(DISTINCT invoice_id) AS orders FROM fct_order_lines
+      WHERE line_type = 'sale' AND year(invoice_ts) = 2010
+    alt_sql: |
+      SELECT SUM(n_orders) AS orders FROM mart_revenue_monthly WHERE year(revenue_month) = 2010
+    answer: {values: [orders]}
+
+  - id: sm-019
+    question: How many orders came from the Netherlands in 2011?
+    tags: [orders, country]
+    gold_sql: |
+      SELECT COUNT(*) AS orders FROM fct_orders o JOIN dim_country c ON o.country_key = c.country_key
+      WHERE o.invoice_type = 'sale' AND c.country_name = 'Netherlands' AND year(o.invoice_ts) = 2011
+    alt_sql: |
+      SELECT COUNT(DISTINCT f.invoice_id) AS orders FROM fct_order_lines f
+      JOIN dim_country c ON f.country_key = c.country_key
+      WHERE f.line_type = 'sale' AND c.iso_alpha2 = 'NL'
+        AND f.invoice_ts >= TIMESTAMP '2011-01-01' AND f.invoice_ts < TIMESTAMP '2012-01-01'
+    answer: {values: [orders]}
+
+  - id: sm-020
+    question: How many cancellation invoices were issued in 2011?
+    tags: [cancellations, orders]
+    gold_sql: |
+      SELECT COUNT(*) AS cancellation_invoices FROM fct_orders
+      WHERE invoice_type = 'cancellation' AND year(invoice_ts) = 2011
+    alt_sql: |
+      SELECT COUNT(DISTINCT invoice_id) AS cancellation_invoices FROM fct_order_lines
+      WHERE line_type = 'cancellation' AND invoice_id LIKE 'C%'
+        AND invoice_ts >= TIMESTAMP '2011-01-01' AND invoice_ts < TIMESTAMP '2012-01-01'
+    answer: {values: [cancellation_invoices]}
+
+  - id: sm-021
+    question: What was the average order value in November 2011?
+    tags: [aov]
+    gold_sql: |
+      SELECT avg_order_value AS aov FROM mart_revenue_monthly WHERE revenue_month = DATE '2011-11-01'
+    alt_sql: |
+      SELECT SUM(CASE WHEN p.is_merchandise AND f.line_type IN ('sale', 'cancellation') THEN f.line_revenue ELSE 0 END)
+             / COUNT(DISTINCT CASE WHEN f.line_type = 'sale' THEN f.invoice_id END) AS aov
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      WHERE f.invoice_ts >= TIMESTAMP '2011-11-01' AND f.invoice_ts < TIMESTAMP '2011-12-01'
+    answer: {values: [aov]}
+
+  - id: sm-022
+    question: What was the average order value over the whole of 2011 (net merchandise revenue divided by orders)?
+    tags: [aov, yearly]
+    gold_sql: |
+      SELECT SUM(net_merchandise_revenue) / SUM(n_orders) AS aov
+      FROM mart_revenue_monthly WHERE year(revenue_month) = 2011
+    alt_sql: |
+      SELECT SUM(CASE WHEN p.is_merchandise AND f.line_type IN ('sale', 'cancellation') THEN f.line_revenue ELSE 0 END)
+             / COUNT(DISTINCT CASE WHEN f.line_type = 'sale' THEN f.invoice_id END) AS aov
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      WHERE year(f.invoice_ts) = 2011
+    answer: {values: [aov]}
+
+  - id: sm-023
+    question: On average, how many lines did a sale invoice have in 2011?
+    tags: [orders, basket]
+    gold_sql: |
+      SELECT AVG(n_lines) AS avg_lines FROM fct_orders WHERE invoice_type = 'sale' AND year(invoice_ts) = 2011
+    alt_sql: |
+      SELECT COUNT(*) / COUNT(DISTINCT f.invoice_id) AS avg_lines FROM fct_order_lines f
+      WHERE f.invoice_id IN (SELECT invoice_id FROM fct_orders WHERE invoice_type = 'sale')
+        AND f.invoice_ts >= TIMESTAMP '2011-01-01' AND f.invoice_ts < TIMESTAMP '2012-01-01'
+    answer: {values: [avg_lines]}
+
+  - id: sm-024
+    question: What was the median merchandise value of a sale invoice in 2011?
+    tags: [orders, median]
+    gold_sql: |
+      SELECT MEDIAN(merchandise_revenue) AS median_invoice FROM fct_orders
+      WHERE invoice_type = 'sale' AND year(invoice_ts) = 2011
+    alt_sql: |
+      WITH inv AS (
+        SELECT f.invoice_id, SUM(CASE WHEN p.is_merchandise THEN f.line_revenue ELSE 0 END) AS v
+        FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+        WHERE f.invoice_id IN (SELECT invoice_id FROM fct_orders WHERE invoice_type = 'sale')
+          AND year(f.invoice_ts) = 2011
+        GROUP BY f.invoice_id)
+      SELECT quantile_cont(v, 0.5) AS median_invoice FROM inv
+    answer: {values: [median_invoice]}
+
+  - id: sm-025
+    question: Which sale invoice had the highest merchandise value in 2011, and what was its value?
+    tags: [orders, top-1]
+    gold_sql: |
+      SELECT invoice_id, merchandise_revenue AS invoice_value FROM fct_orders
+      WHERE invoice_type = 'sale' AND year(invoice_ts) = 2011
+      ORDER BY merchandise_revenue DESC LIMIT 1
+    alt_sql: |
+      SELECT arg_max(invoice_id, v) AS invoice_id, max(v) AS invoice_value FROM (
+        SELECT f.invoice_id, SUM(f.line_revenue) AS v
+        FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+        WHERE p.is_merchandise AND f.line_type = 'sale' AND year(f.invoice_ts) = 2011
+        GROUP BY f.invoice_id)
+    answer: {values: [invoice_value], entities: [invoice_id]}
+
+  - id: sm-026
+    question: How many active customers (identified customers with at least one purchase) did we have in November 2011?
+    tags: [customers]
+    gold_sql: |
+      SELECT n_active_customers AS active_customers FROM mart_revenue_monthly WHERE revenue_month = DATE '2011-11-01'
+    alt_sql: |
+      SELECT COUNT(DISTINCT customer_id) AS active_customers FROM fct_order_lines
+      WHERE line_type = 'sale' AND customer_id IS NOT NULL
+        AND invoice_ts >= TIMESTAMP '2011-11-01' AND invoice_ts < TIMESTAMP '2011-12-01'
+    answer: {values: [active_customers]}
+
+  - id: sm-027
+    question: How many distinct identified customers made at least one purchase in 2011?
+    tags: [customers]
+    gold_sql: |
+      SELECT COUNT(DISTINCT customer_id) AS active_customers FROM fct_order_lines
+      WHERE line_type = 'sale' AND customer_id IS NOT NULL AND year(invoice_ts) = 2011
+    alt_sql: |
+      SELECT COUNT(DISTINCT customer_id) AS active_customers FROM fct_orders
+      WHERE invoice_type = 'sale' AND customer_sk <> '-1'
+        AND invoice_ts >= TIMESTAMP '2011-01-01' AND invoice_ts < TIMESTAMP '2012-01-01'
+    answer: {values: [active_customers]}
+
+  - id: sm-028
+    question: How many new customers (first ever purchase) did we acquire in 2011?
+    tags: [customers, cohorts]
+    gold_sql: |
+      SELECT SUM(cohort_size) AS new_customers FROM mart_cohort_retention
+      WHERE months_since_first_purchase = 0 AND year(cohort_month) = 2011
+    alt_sql: |
+      SELECT COUNT(*) AS new_customers FROM (
+        SELECT customer_id, MIN(invoice_ts) AS first_ts FROM fct_order_lines
+        WHERE line_type = 'sale' AND customer_id IS NOT NULL GROUP BY customer_id)
+      WHERE year(first_ts) = 2011
+    answer: {values: [new_customers]}
+
+  - id: sm-029
+    question: How many customers are currently in the platinum loyalty tier?
+    tags: [customers, tier]
+    gold_sql: |
+      SELECT COUNT(*) AS platinum_customers FROM dim_customer WHERE is_current AND loyalty_tier = 'platinum'
+    alt_sql: |
+      SELECT COUNT(DISTINCT customer_id) AS platinum_customers FROM dim_customer
+      WHERE valid_to = TIMESTAMP '9999-12-31' AND loyalty_tier = 'platinum'
+    answer: {values: [platinum_customers]}
+
+  - id: sm-030
+    question: How many customers currently have Germany as their country?
+    tags: [customers, country]
+    gold_sql: |
+      SELECT COUNT(*) AS customers FROM dim_customer WHERE is_current AND country_name = 'Germany'
+    alt_sql: |
+      SELECT COUNT(*) AS customers FROM (
+        SELECT customer_id, arg_max(country_name, version_number) AS country
+        FROM dim_customer WHERE customer_sk <> '-1' GROUP BY customer_id)
+      WHERE country = 'Germany'
+    answer: {values: [customers]}
+
+  - id: sm-031
+    question: How many customers have more than one version in the customer history, that is, changed loyalty tier or country at least once?
+    tags: [customers, scd2]
+    gold_sql: |
+      SELECT COUNT(*) AS customers FROM (
+        SELECT customer_id FROM dim_customer GROUP BY customer_id HAVING COUNT(*) > 1)
+    alt_sql: |
+      SELECT COUNT(DISTINCT customer_id) AS customers FROM dim_customer WHERE version_number > 1
+    answer: {values: [customers]}
+
+  - id: sm-032
+    question: In 2011, how many orders did an active identified customer place on average?
+    tags: [customers, frequency]
+    gold_sql: |
+      SELECT COUNT(DISTINCT invoice_id) / COUNT(DISTINCT customer_id) AS orders_per_customer
+      FROM fct_order_lines
+      WHERE line_type = 'sale' AND customer_id IS NOT NULL AND year(invoice_ts) = 2011
+    alt_sql: |
+      SELECT AVG(n) AS orders_per_customer FROM (
+        SELECT customer_id, COUNT(*) AS n FROM fct_orders
+        WHERE invoice_type = 'sale' AND customer_id IS NOT NULL AND year(invoice_ts) = 2011
+        GROUP BY customer_id)
+    answer: {values: [orders_per_customer]}
+
+  - id: sm-033
+    question: What share of the January 2011 acquisition cohort bought again three months after their first purchase month (in April 2011)?
+    tags: [retention, cohorts]
+    gold_sql: |
+      SELECT retention_rate FROM mart_cohort_retention
+      WHERE cohort_month = DATE '2011-01-01' AND months_since_first_purchase = 3
+    alt_sql: |
+      WITH firsts AS (
+        SELECT customer_id, date_trunc('month', MIN(invoice_ts)) AS cohort
+        FROM fct_order_lines WHERE line_type = 'sale' AND customer_id IS NOT NULL GROUP BY customer_id),
+      jan AS (SELECT customer_id FROM firsts WHERE cohort = TIMESTAMP '2011-01-01'),
+      apr AS (SELECT DISTINCT customer_id FROM fct_order_lines
+              WHERE line_type = 'sale' AND invoice_ts >= TIMESTAMP '2011-04-01' AND invoice_ts < TIMESTAMP '2011-05-01')
+      SELECT ROUND(COUNT(apr.customer_id) / COUNT(*), 4) AS retention_rate
+      FROM jan LEFT JOIN apr ON jan.customer_id = apr.customer_id
+    answer: {values: [retention_rate]}
+
+  - id: sm-034
+    question: How many customers made their first purchase in December 2010?
+    tags: [customers, cohorts]
+    gold_sql: |
+      SELECT cohort_size FROM mart_cohort_retention
+      WHERE cohort_month = DATE '2010-12-01' AND months_since_first_purchase = 0
+    alt_sql: |
+      SELECT COUNT(*) AS cohort_size FROM (
+        SELECT customer_id, MIN(invoice_ts) AS first_ts FROM fct_order_lines
+        WHERE line_type = 'sale' AND customer_id IS NOT NULL GROUP BY customer_id)
+      WHERE first_ts >= TIMESTAMP '2010-12-01' AND first_ts < TIMESTAMP '2011-01-01'
+    answer: {values: [cohort_size]}
+
+  - id: sm-035
+    question: In 2011, what was net merchandise revenue per active identified customer? Divide the net merchandise revenue of identified customers by the number of identified customers who made at least one purchase.
+    tags: [customers, revenue]
+    gold_sql: |
+      SELECT (SELECT SUM(f.line_revenue) FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+              WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation')
+                AND f.customer_id IS NOT NULL AND year(f.invoice_ts) = 2011)
+           / (SELECT COUNT(DISTINCT customer_id) FROM fct_order_lines
+              WHERE line_type = 'sale' AND customer_id IS NOT NULL AND year(invoice_ts) = 2011) AS revenue_per_customer
+    alt_sql: |
+      SELECT SUM(o.merchandise_revenue) FILTER (WHERE o.invoice_type IN ('sale', 'cancellation'))
+             / COUNT(DISTINCT o.customer_id) FILTER (WHERE o.invoice_type = 'sale') AS revenue_per_customer
+      FROM fct_orders o
+      WHERE o.customer_sk <> '-1' AND o.invoice_ts >= TIMESTAMP '2011-01-01' AND o.invoice_ts < TIMESTAMP '2012-01-01'
+    answer: {values: [revenue_per_customer]}
+
+  - id: sm-036
+    question: How many distinct merchandise products were sold in 2011?
+    tags: [products]
+    gold_sql: |
+      SELECT COUNT(DISTINCT f.product_key) AS products
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      WHERE p.is_merchandise AND f.line_type = 'sale' AND year(f.invoice_ts) = 2011
+    alt_sql: |
+      SELECT COUNT(*) AS products FROM dim_product p
+      WHERE p.is_merchandise AND EXISTS (
+        SELECT 1 FROM fct_order_lines f WHERE f.product_key = p.product_key
+          AND f.line_type = 'sale' AND f.invoice_ts >= TIMESTAMP '2011-01-01' AND f.invoice_ts < TIMESTAMP '2012-01-01')
+    answer: {values: [products]}
+
+  - id: sm-037
+    question: How many merchandise units were sold in December 2010 (sale lines, before cancellations)?
+    tags: [units]
+    gold_sql: |
+      SELECT SUM(f.quantity) AS units FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      WHERE p.is_merchandise AND f.line_type = 'sale'
+        AND f.invoice_ts >= TIMESTAMP '2010-12-01' AND f.invoice_ts < TIMESTAMP '2011-01-01'
+    alt_sql: |
+      SELECT SUM(f.quantity) AS units FROM fct_order_lines f
+      JOIN dim_date d ON f.date_key = d.date_key
+      WHERE f.line_type = 'sale' AND d.year_month = '2010-12'
+        AND f.product_key NOT IN (SELECT product_key FROM dim_product WHERE NOT is_merchandise)
+    answer: {values: [units]}
+
+  - id: sm-038
+    question: Which product sold the most units in 2010 (sale lines, before cancellations), and how many units?
+    tags: [products, top-1, units]
+    gold_sql: |
+      SELECT p.stock_code, p.product_description, SUM(f.quantity) AS units
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      WHERE p.is_merchandise AND f.line_type = 'sale' AND year(f.invoice_ts) = 2010
+      GROUP BY 1, 2 ORDER BY units DESC LIMIT 1
+    alt_sql: |
+      WITH u AS (
+        SELECT product_key, SUM(quantity) AS units FROM fct_order_lines
+        WHERE line_type = 'sale' AND invoice_ts >= TIMESTAMP '2010-01-01' AND invoice_ts < TIMESTAMP '2011-01-01'
+        GROUP BY product_key)
+      SELECT p.stock_code, p.product_description, u.units FROM u JOIN dim_product p ON u.product_key = p.product_key
+      WHERE p.is_merchandise QUALIFY ROW_NUMBER() OVER (ORDER BY u.units DESC) = 1
+    answer: {values: [units], entities: [{any_of: [stock_code, product_description]}]}
+
+  - id: sm-039
+    question: Which product generated the most net merchandise revenue in 2010, and how much?
+    tags: [products, top-1, revenue]
+    gold_sql: |
+      SELECT p.stock_code, p.product_description, SUM(f.line_revenue) AS net_revenue
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation') AND year(f.invoice_ts) = 2010
+      GROUP BY 1, 2 ORDER BY net_revenue DESC LIMIT 1
+    alt_sql: |
+      SELECT arg_max(stock_code, r) AS stock_code, arg_max(product_description, r) AS product_description, max(r) AS net_revenue
+      FROM (SELECT p.stock_code, p.product_description, SUM(f.line_revenue) AS r
+            FROM dim_product p JOIN fct_order_lines f ON f.product_key = p.product_key
+            JOIN dim_date d ON f.date_key = d.date_key
+            WHERE p.is_merchandise AND f.line_type <> 'stock_write_off' AND f.line_type <> 'bad_debt_adjustment'
+              AND d.calendar_year = 2010
+            GROUP BY 1, 2)
+    answer: {values: [net_revenue], entities: [{any_of: [stock_code, product_description]}]}
+
+  - id: sm-040
+    question: How much net merchandise revenue did products with "CHRISTMAS" in their description generate in November 2011?
+    tags: [products, revenue, text-filter]
+    gold_sql: |
+      SELECT SUM(f.line_revenue) AS net_revenue
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation')
+        AND p.product_description LIKE '%CHRISTMAS%'
+        AND f.invoice_ts >= TIMESTAMP '2011-11-01' AND f.invoice_ts < TIMESTAMP '2011-12-01'
+    alt_sql: |
+      SELECT SUM(f.line_revenue) AS net_revenue FROM fct_order_lines f
+      JOIN dim_date d ON f.date_key = d.date_key
+      WHERE f.line_type IN ('sale', 'cancellation') AND d.year_month = '2011-11'
+        AND f.product_key IN (SELECT product_key FROM dim_product
+                              WHERE is_merchandise AND contains(product_description, 'CHRISTMAS'))
+    answer: {values: [net_revenue]}
+
+  - id: sm-041
+    question: What was the average unit price of product 85123A on its sale lines in 2011 (simple average over the lines)?
+    tags: [products, price]
+    gold_sql: |
+      SELECT AVG(f.unit_price) AS avg_unit_price FROM fct_order_lines f
+      JOIN dim_product p ON f.product_key = p.product_key
+      WHERE p.stock_code = '85123A' AND f.line_type = 'sale' AND year(f.invoice_ts) = 2011
+    alt_sql: |
+      SELECT SUM(f.unit_price) / COUNT(*) AS avg_unit_price FROM fct_order_lines f
+      WHERE f.line_type = 'sale' AND f.invoice_ts >= TIMESTAMP '2011-01-01' AND f.invoice_ts < TIMESTAMP '2012-01-01'
+        AND f.product_key = (SELECT product_key FROM dim_product WHERE stock_code = '85123A')
+    answer: {values: [avg_unit_price]}
+
+  - id: sm-042
+    question: How many product codes in the catalogue are not merchandise (postage, fees, adjustments, vouchers and so on)?
+    tags: [products, catalogue]
+    gold_sql: |
+      SELECT COUNT(*) AS non_merchandise_codes FROM dim_product WHERE NOT is_merchandise
+    alt_sql: |
+      SELECT COUNT(*) AS non_merchandise_codes FROM dim_product WHERE product_category <> 'merchandise'
+    answer: {values: [non_merchandise_codes]}
+
+  - id: sm-043
+    question: How much postage revenue (product category postage) was charged in 2011?
+    tags: [non-merchandise, postage]
+    gold_sql: |
+      SELECT SUM(f.line_revenue) AS postage FROM fct_order_lines f
+      JOIN dim_product p ON f.product_key = p.product_key
+      WHERE p.product_category = 'postage' AND year(f.invoice_ts) = 2011
+    alt_sql: |
+      SELECT SUM(f.line_revenue) AS postage FROM fct_order_lines f
+      JOIN dim_date d ON f.date_key = d.date_key
+      WHERE d.calendar_year = 2011
+        AND f.product_key IN (SELECT product_key FROM dim_product WHERE product_category = 'postage')
+    answer: {values: [postage]}
+
+  - id: sm-044
+    question: In how many countries did we have at least one sale in 2011?
+    tags: [countries]
+    gold_sql: |
+      SELECT COUNT(DISTINCT country_key) AS countries FROM fct_order_lines
+      WHERE line_type = 'sale' AND year(invoice_ts) = 2011
+    alt_sql: |
+      SELECT COUNT(*) AS countries FROM dim_country c WHERE EXISTS (
+        SELECT 1 FROM fct_orders o WHERE o.country_key = c.country_key AND o.invoice_type = 'sale'
+          AND o.invoice_ts >= TIMESTAMP '2011-01-01' AND o.invoice_ts < TIMESTAMP '2012-01-01')
+    answer: {values: [countries]}
+
+  - id: sm-045
+    question: Outside the United Kingdom, which country generated the most net merchandise revenue in 2011, and how much?
+    tags: [countries, top-1, revenue]
+    gold_sql: |
+      SELECT c.country_name, SUM(f.line_revenue) AS net_revenue
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      JOIN dim_country c ON f.country_key = c.country_key
+      WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation') AND year(f.invoice_ts) = 2011
+        AND c.country_name <> 'United Kingdom'
+      GROUP BY 1 ORDER BY net_revenue DESC LIMIT 1
+    alt_sql: |
+      SELECT c.country_name, SUM(o.merchandise_revenue) AS net_revenue
+      FROM fct_orders o JOIN dim_country c ON o.country_key = c.country_key
+      WHERE o.invoice_type IN ('sale', 'cancellation') AND NOT c.is_domestic_market AND year(o.invoice_ts) = 2011
+      GROUP BY 1 QUALIFY RANK() OVER (ORDER BY SUM(o.merchandise_revenue) DESC) = 1
+    answer: {values: [net_revenue], entities: [country_name]}
+
+  - id: sm-046
+    question: How many countries are in the Western Europe sales region?
+    tags: [countries, reference]
+    gold_sql: |
+      SELECT COUNT(*) AS countries FROM dim_country WHERE region = 'Western Europe'
+    alt_sql: |
+      SELECT COUNT(DISTINCT country_name) AS countries FROM dim_country WHERE region LIKE 'Western%'
+    answer: {values: [countries]}
+
+  - id: sm-047
+    question: What was net merchandise revenue from Ireland (EIRE) in 2010?
+    tags: [revenue, country]
+    gold_sql: |
+      SELECT SUM(f.line_revenue) AS net_revenue
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      JOIN dim_country c ON f.country_key = c.country_key
+      WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation')
+        AND c.country_name = 'EIRE' AND year(f.invoice_ts) = 2010
+    alt_sql: |
+      SELECT SUM(o.merchandise_revenue) AS net_revenue FROM fct_orders o
+      JOIN dim_country c ON o.country_key = c.country_key
+      WHERE o.invoice_type IN ('sale', 'cancellation') AND c.iso_alpha2 = 'IE'
+        AND o.invoice_ts >= TIMESTAMP '2010-01-01' AND o.invoice_ts < TIMESTAMP '2011-01-01'
+    answer: {values: [net_revenue]}
+
+  - id: sm-048
+    question: Which day of the week had the most orders in 2011, and how many?
+    tags: [weekday, orders, top-1]
+    gold_sql: |
+      SELECT d.day_name, COUNT(DISTINCT f.invoice_id) AS orders
+      FROM fct_order_lines f JOIN dim_date d ON f.date_key = d.date_key
+      WHERE f.line_type = 'sale' AND d.calendar_year = 2011
+      GROUP BY 1 ORDER BY orders DESC LIMIT 1
+    alt_sql: |
+      SELECT dayname(invoice_ts) AS day_name, COUNT(*) AS orders FROM fct_orders
+      WHERE invoice_type = 'sale' AND year(invoice_ts) = 2011
+      GROUP BY 1 QUALIFY ROW_NUMBER() OVER (ORDER BY COUNT(*) DESC) = 1
+    answer: {values: [orders], entities: [day_name]}
+
+  - id: sm-049
+    question: Which month of 2010 had the highest net merchandise revenue, and what was it?
+    tags: [revenue, monthly, top-1]
+    gold_sql: |
+      SELECT revenue_month, net_merchandise_revenue AS net_revenue FROM mart_revenue_monthly
+      WHERE year(revenue_month) = 2010 ORDER BY net_revenue DESC LIMIT 1
+    alt_sql: |
+      SELECT CAST(date_trunc('month', f.invoice_ts) AS DATE) AS revenue_month, SUM(f.line_revenue) AS net_revenue
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation') AND year(f.invoice_ts) = 2010
+      GROUP BY 1 ORDER BY 2 DESC LIMIT 1
+    answer: {values: [net_revenue], entities: [revenue_month]}
+
+  - id: sm-050
+    question: What was the month-over-month growth of net merchandise revenue in September 2011?
+    tags: [growth, mom]
+    gold_sql: |
+      SELECT mom_growth FROM mart_revenue_monthly WHERE revenue_month = DATE '2011-09-01'
+    alt_sql: |
+      WITH m AS (
+        SELECT date_trunc('month', f.invoice_ts) AS mth, SUM(f.line_revenue) AS r
+        FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+        WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation') GROUP BY 1)
+      SELECT ROUND((sep.r - aug.r) / aug.r, 4) AS mom_growth FROM m sep, m aug
+      WHERE sep.mth = TIMESTAMP '2011-09-01' AND aug.mth = TIMESTAMP '2011-08-01'
+    answer: {values: [mom_growth]}
+
+  - id: sm-051
+    question: What was the year-over-year growth of net merchandise revenue in November 2011 compared with November 2010?
+    tags: [growth, yoy]
+    gold_sql: |
+      SELECT yoy_growth FROM mart_revenue_monthly WHERE revenue_month = DATE '2011-11-01'
+    alt_sql: |
+      SELECT ROUND(SUM(CASE WHEN year(revenue_month) = 2011 THEN net_merchandise_revenue END)
+             / SUM(CASE WHEN year(revenue_month) = 2010 THEN net_merchandise_revenue END) - 1, 4) AS yoy_growth
+      FROM mart_revenue_monthly WHERE month(revenue_month) = 11 AND year(revenue_month) IN (2010, 2011)
+    answer: {values: [yoy_growth]}
+
+  - id: sm-052
+    question: What was year-to-date net merchandise revenue at the end of September 2011?
+    tags: [revenue, ytd]
+    gold_sql: |
+      SELECT ytd_net_revenue FROM mart_revenue_monthly WHERE revenue_month = DATE '2011-09-01'
+    alt_sql: |
+      SELECT SUM(f.line_revenue) AS ytd_net_revenue
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation')
+        AND f.invoice_ts >= TIMESTAMP '2011-01-01' AND f.invoice_ts < TIMESTAMP '2011-10-01'
+    answer: {values: [ytd_net_revenue]}
+
+  - id: sm-053
+    question: On how many distinct days in November 2011 was at least one invoice recorded?
+    tags: [calendar]
+    gold_sql: |
+      SELECT COUNT(DISTINCT CAST(invoice_ts AS DATE)) AS trading_days FROM fct_order_lines
+      WHERE invoice_ts >= TIMESTAMP '2011-11-01' AND invoice_ts < TIMESTAMP '2011-12-01'
+    alt_sql: |
+      SELECT COUNT(*) AS trading_days FROM dim_date d
+      WHERE d.year_month = '2011-11' AND EXISTS (SELECT 1 FROM fct_orders o WHERE o.date_key = d.date_key)
+    answer: {values: [trading_days]}
+
+  - id: sm-054
+    question: What was the average net merchandise revenue per trading day in November 2011 (days with at least one invoice)?
+    tags: [revenue, daily]
+    gold_sql: |
+      SELECT SUM(f.line_revenue) / COUNT(DISTINCT f.date_key) AS revenue_per_day
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation')
+        AND f.invoice_ts >= TIMESTAMP '2011-11-01' AND f.invoice_ts < TIMESTAMP '2011-12-01'
+    alt_sql: |
+      SELECT (SELECT net_merchandise_revenue FROM mart_revenue_monthly WHERE revenue_month = DATE '2011-11-01')
+             / (SELECT COUNT(DISTINCT date_key) FROM fct_orders WHERE invoice_ts >= TIMESTAMP '2011-11-01'
+                AND invoice_ts < TIMESTAMP '2011-12-01') AS revenue_per_day
+    answer: {values: [revenue_per_day]}
+    note: Both count days with any invoice; every November 2011 trading day has merchandise lines.
+
+  - id: sm-055
+    question: How many stock write-off lines were recorded in 2011?
+    tags: [data-quality]
+    gold_sql: |
+      SELECT COUNT(*) AS write_off_lines FROM fct_order_lines
+      WHERE line_type = 'stock_write_off' AND year(invoice_ts) = 2011
+    alt_sql: |
+      SELECT SUM(n_lines) AS write_off_lines FROM fct_orders
+      WHERE invoice_type = 'stock_write_off' AND year(invoice_ts) = 2011
+    answer: {values: [write_off_lines]}
+
+  - id: sm-056
+    question: How many invoice lines in the whole dataset are flagged as bulk-quantity outliers (10,000 units or more)?
+    tags: [data-quality]
+    gold_sql: |
+      SELECT COUNT(*) AS outlier_lines FROM fct_order_lines WHERE is_quantity_outlier
+    alt_sql: |
+      SELECT COUNT(*) AS outlier_lines FROM fct_order_lines WHERE abs(quantity) >= 10000
+    answer: {values: [outlier_lines]}
+
+  - id: sm-057
+    question: How many merchandise units were cancelled in 2011?
+    tags: [cancellations, units]
+    gold_sql: |
+      SELECT -SUM(f.quantity) AS units_cancelled FROM fct_order_lines f
+      JOIN dim_product p ON f.product_key = p.product_key
+      WHERE p.is_merchandise AND f.line_type = 'cancellation' AND year(f.invoice_ts) = 2011
+    alt_sql: |
+      SELECT SUM(abs(f.quantity)) AS units_cancelled FROM fct_order_lines f
+      WHERE f.invoice_id LIKE 'C%' AND f.invoice_ts >= TIMESTAMP '2011-01-01' AND f.invoice_ts < TIMESTAMP '2012-01-01'
+        AND f.product_key IN (SELECT product_key FROM dim_product WHERE is_merchandise)
+    answer: {values: [units_cancelled]}
+
+  - id: sm-058
+    question: What was the 2011 cancellation rate by value, defined as cancelled merchandise value divided by gross merchandise sales?
+    tags: [cancellations, rate]
+    gold_sql: |
+      SELECT -SUM(cancelled_merchandise) / SUM(gross_merchandise_sales) AS cancellation_rate
+      FROM mart_revenue_monthly WHERE year(revenue_month) = 2011
+    alt_sql: |
+      SELECT -SUM(CASE WHEN f.line_type = 'cancellation' THEN f.line_revenue ELSE 0 END)
+             / SUM(CASE WHEN f.line_type = 'sale' THEN f.line_revenue ELSE 0 END) AS cancellation_rate
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      WHERE p.is_merchandise AND year(f.invoice_ts) = 2011
+    answer: {values: [cancellation_rate]}
+
+  - id: sm-059
+    question: How many sale invoices in 2011 had more than 50 lines?
+    tags: [orders, basket]
+    gold_sql: |
+      SELECT COUNT(*) AS big_invoices FROM fct_orders
+      WHERE invoice_type = 'sale' AND n_lines > 50 AND year(invoice_ts) = 2011
+    alt_sql: |
+      SELECT COUNT(*) AS big_invoices FROM (
+        SELECT f.invoice_id FROM fct_order_lines f
+        WHERE f.invoice_id IN (SELECT invoice_id FROM fct_orders WHERE invoice_type = 'sale')
+          AND f.invoice_ts >= TIMESTAMP '2011-01-01' AND f.invoice_ts < TIMESTAMP '2012-01-01'
+        GROUP BY f.invoice_id HAVING COUNT(*) > 50)
+    answer: {values: [big_invoices]}
+
+  - id: sm-060
+    question: What was the average unit price across merchandise sale lines in November 2011 (simple average over lines)?
+    tags: [price]
+    gold_sql: |
+      SELECT AVG(f.unit_price) AS avg_unit_price FROM fct_order_lines f
+      JOIN dim_product p ON f.product_key = p.product_key
+      WHERE p.is_merchandise AND f.line_type = 'sale'
+        AND f.invoice_ts >= TIMESTAMP '2011-11-01' AND f.invoice_ts < TIMESTAMP '2011-12-01'
+    alt_sql: |
+      SELECT SUM(f.unit_price) / COUNT(*) AS avg_unit_price FROM fct_order_lines f
+      JOIN dim_date d ON f.date_key = d.date_key
+      WHERE f.line_type = 'sale' AND d.year_month = '2011-11'
+        AND f.product_key IN (SELECT product_key FROM dim_product WHERE is_merchandise)
+    answer: {values: [avg_unit_price]}

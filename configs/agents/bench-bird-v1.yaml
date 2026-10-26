@@ -1,0 +1,30 @@
+# Agent configuration for the public SQLite benchmarks (BIRD dev, Spider2-lite).
+# Same model and loop as the governed agent; the tools that need the sales warehouse
+# (get_metric, make_chart) and the planner (benchmark questions are all answerable and not
+# interactive) are off. Greedy decoding (temperature 0), as for the single-shot baseline, so
+# the comparison isolates the control flow.
+name: bench-agent
+version: "1"
+description: Tool loop over one SQLite database; final answer is a SQL query.
+prompt: bench_agent_v1.md
+plan_prompt: plan_v1.md
+use_planner: false
+tools: [search_catalog, describe_model, run_sql]
+retrieval_k: 8
+model:
+  name: local-agent
+  temperature: 0.0
+  max_tokens: 1024
+  timeout_s: 180
+  max_retries: 6
+  max_concurrency: 4
+  max_context_tokens: 12000
+budgets:
+  max_llm_calls: 10
+  max_total_tokens: 80000
+  max_wall_s: 300
+  max_check_retries: 1
+  sql:
+    max_rows: 50
+    timeout_s: 30
+    max_queries: 8

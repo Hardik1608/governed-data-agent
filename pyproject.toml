@@ -1,0 +1,81 @@
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "governed-data-agent"
+version = "0.1.0"
+description = "A governed data agent over a dbt/DuckDB sales warehouse: read-only by construction, PII masked, every number traceable to its SQL, cost and latency budgets, MCP + FastAPI, release-gated by a golden-set eval."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Hardik Soni" }]
+# Exact pins live in requirements.txt (runtime) and requirements-dev.txt (CI / tests).
+dependencies = [
+    "duckdb>=1.5,<1.6",
+    "sqlglot>=30.22,<31",
+    "langgraph>=1.2,<1.3",
+    "langgraph-checkpoint-sqlite>=3.1,<3.2",
+    "mcp>=2.3,<2.4",
+    "mlflow>=3.17,<3.18",
+    "fastapi>=0.143",
+    "uvicorn>=0.54",
+    "prometheus-client>=0.26",
+    "httpx>=0.28,<0.29",
+    "pydantic>=2.14,<3",
+    "pydantic-settings>=2.15,<3",
+    "pyyaml>=6.0",
+    "jsonschema>=4.26",
+    "numpy>=2.4",
+]
+
+[project.scripts]
+data-agent = "data_agent.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+data_agent = ["prompts/*.md", "py.typed"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = ["data", "reports", "mlruns", ".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "S608"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests and benchmark adapters build SQL strings on purpose (fixtures, gold queries).
+"tests/**" = ["S608"]
+"scripts/**" = ["S608"]
+"src/data_agent/bench/**" = ["S608"]
+"src/data_agent/warehouse/replica.py" = ["S608"]
+"src/data_agent/safety/executor.py" = ["S608"]
+"src/data_agent/eval/golden.py" = ["S608"]
+"src/data_agent/warehouse/mini.py" = ["S608"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["data_agent"]
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Header", "fastapi.Query"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+markers = [
+    "warehouse: needs the real sales warehouse under data/ (run `python scripts/make_data.py`)",
+    "ollama: needs a local Ollama server with nomic-embed-text (http://localhost:11434)",
+    "llm: needs a real OpenAI-compatible model server (DATA_AGENT_LLM_BASE_URL)",
+    "slow: takes more than ~10 s",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning:mlflow.*",
+    "ignore::FutureWarning:mlflow.*",
+]
+
+[tool.coverage.run]
+source = ["data_agent"]

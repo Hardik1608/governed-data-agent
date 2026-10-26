@@ -1,0 +1,238 @@
+{
+ "local_tasks": 135,
+ "tasks_with_gold_sql": 24,
+ "results": {
+  "scored wrong": 8,
+  "scored correct": 14,
+  "gold SQL failed": 2
+ },
+ "validator_rejections": 0,
+ "tasks": [
+  {
+   "instance_id": "local003",
+   "db": "E_commerce",
+   "validator": "allow",
+   "validator_codes": [],
+   "result": "scored wrong",
+   "detail": {
+    "pred_rows": 11,
+    "gold_rows": 9,
+    "pred_cols": 2,
+    "gold_cols": 2,
+    "gold_variants": 4
+   }
+  },
+  {
+   "instance_id": "local004",
+   "db": "E_commerce",
+   "validator": "allow",
+   "validator_codes": [],
+   "result": "scored correct"
+  },
+  {
+   "instance_id": "local008",
+   "db": "Baseball",
+   "validator": "allow",
+   "validator_codes": [],
+   "result": "scored correct"
+  },
+  {
+   "instance_id": "local017",
+   "db": "California_Traffic_Collision",
+   "validator": "allow",
+   "validator_codes": [],
+   "result": "scored correct"
+  },
+  {
+   "instance_id": "local019",
+   "db": "WWE",
+   "validator": "allow",
+   "validator_codes": [],
+   "result": "scored correct"
+  },
+  {
+   "instance_id": "local022",
+   "db": "IPL",
+   "validator": "allow",
+   "validator_codes": [],
+   "result": "scored correct"
+  },
+  {
+   "instance_id": "local023",
+   "db": "IPL",
+   "validator": "allow",
+   "validator_codes": [],
+   "result": "scored wrong",
+   "detail": {
+    "pred_rows": 5,
+    "gold_rows": 5,
+    "pred_cols": 2,
+    "gold_cols": 3,
+    "gold_variants": 1
+   }
+  },
+  {
+   "instance_id": "local029",
+   "db": "Brazilian_E_Commerce",
+   "validator": "allow",
+   "validator_codes": [],
+   "result": "scored wrong",
+   "detail": {
+    "pred_rows": 3,
+    "gold_rows": 3,
+    "pred_cols": 3,
+    "gold_cols": 5,
+    "gold_variants": 2
+   }
+  },
+  {
+   "instance_id": "local038",
+   "db": "Pagila",
+   "validator": "allow",
+   "validator_codes": [],
+   "result": "scored correct"
+  },
+  {
+   "instance_id": "local039",
+   "db": "Pagila",
+   "validator": "allow",
+   "validator_codes": [],
+   "result": "scored correct"
+  },
+  {
+   "instance_id": "local058",
+   "db": "education_business",
+   "validator": "allow",
+   "validator_codes": [],
+   "result": "scored correct"
+  },
+  {
+   "instance_id": "local066",
+   "db": "modern_data",
+   "validator": "allow",
+   "validator_codes": [],
+   "result": "scored wrong",
+   "detail": {
+    "pred_rows": 12,
+    "gold_rows": 12,
+    "pred_cols": 2,
+    "gold_cols": 2,
+    "gold_variants": 3
+   }
+  },
+  {
+   "instance_id": "local065",
+   "db": "modern_data",
+   "validator": "allow",
+   "validator_codes": [],
+   "result": "scored correct"
+  },
+  {
+   "instance_id": "local075",
+   "db": "bank_sales_trading",
+   "validator": "allow",
+   "validator_codes": [],
+   "result": "gold SQL failed",
+   "error": "Query exceeded the 120s time limit"
+  },
+  {
+   "instance_id": "local078",
+   "db": "bank_sales_trading",
+   "validator": "allow",
+   "validator_codes": [],
+   "result": "scored correct"
+  },
+  {
+   "instance_id": "local099",
+   "db": "Db-IMDB",
+   "validator": "allow",
+   "validator_codes": [],
+   "result": "gold SQL failed",
+   "error": "Query exceeded the 120s time limit"
+  },
+  {
+   "instance_id": "local131",
+   "db": "EntertainmentAgency",
+   "validator": "allow",
+   "validator_codes": [],
+   "result": "scored wrong",
+   "detail": {
+    "pred_rows": 20,
+    "gold_rows": 25,
+    "pred_cols": 4,
+    "gold_cols": 5,
+    "gold_variants": 1
+   }
+  },
+  {
+   "instance_id": "local163",
+   "db": "education_business",
+   "validator": "allow",
+   "validator_codes": [],
+   "result": "scored correct"
+  },
+  {
+   "instance_id": "local197",
+   "db": "sqlite-sakila",
+   "validator": "allow",
+   "validator_codes": [],
+   "result": "scored correct"
+  },
+  {
+   "instance_id": "local199",
+   "db": "sqlite-sakila",
+   "validator": "allow",
+   "validator_codes": [],
+   "result": "scored correct"
+  },
+  {
+   "instance_id": "local210",
+   "db": "delivery_center",
+   "validator": "allow",
+   "validator_codes": [],
+   "result": "scored wrong",
+   "detail": {
+    "pred_rows": 21,
+    "gold_rows": 21,
+    "pred_cols": 1,
+    "gold_cols": 6,
+    "gold_variants": 2
+   }
+  },
+  {
+   "instance_id": "local219",
+   "db": "EU_soccer",
+   "validator": "allow",
+   "validator_codes": [],
+   "result": "scored wrong",
+   "detail": {
+    "pred_rows": 11,
+    "gold_rows": 11,
+    "pred_cols": 2,
+    "gold_cols": 3,
+    "gold_variants": 6
+   }
+  },
+  {
+   "instance_id": "local301",
+   "db": "bank_sales_trading",
+   "validator": "allow",
+   "validator_codes": [],
+   "result": "scored correct"
+  },
+  {
+   "instance_id": "local309",
+   "db": "f1",
+   "validator": "allow",
+   "validator_codes": [],
+   "result": "scored wrong",
+   "detail": {
+    "pred_rows": 75,
+    "gold_rows": 75,
+    "pred_cols": 3,
+    "gold_cols": 3,
+    "gold_variants": 3
+   }
+  }
+ ]
+}

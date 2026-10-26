@@ -1,0 +1,56 @@
+mlflow-1  | Registry store URI not provided. Using backend store URI.
+mlflow-1  | 2026/10/20 17:02:19 INFO mlflow.store.db.utils: Creating initial MLflow database tables...
+mlflow-1  | 2026/10/20 17:02:19 INFO mlflow.store.db.utils: Updating database tables
+mlflow-1  | [MLflow] Security middleware enabled. Allowed hosts: mlflow:5000, localhost:5000, 127.0.0.1:5000.
+mlflow-1  | /usr/local/lib/python3.11/site-packages/mlflow/server/fastapi_app.py:23: StarletteDeprecationWarning: starlette.middleware.wsgi is deprecated and will be removed in a future release. Please refer to https://github.com/abersheeran/a2wsgi as a replacement.
+mlflow-1  |   from starlette.middleware.wsgi import WSGIResponder, build_environ
+mlflow-1  | 2026/10/20 17:02:22 INFO:     Started server process [26]
+mlflow-1  | 2026/10/20 17:02:22 INFO:     Waiting for application startup.
+mlflow-1  | 2026/10/20 17:02:22 INFO:     Application startup complete.
+mlflow-1  | 2026/10/20 17:02:22 INFO:     Uvicorn running on http://0.0.0.0:5000 (Press CTRL+C to quit)
+mlflow-1  | 2026/10/20 17:02:23 INFO:     172.19.0.3:59620 - "GET /api/2.0/mlflow/experiments/get-by-name?experiment_name=governed-data-agent HTTP/1.1" 404 Not Found
+mlflow-1  | 2026/10/20 17:02:23 INFO:     172.19.0.3:59620 - "POST /api/2.0/mlflow/experiments/create HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:02:23 INFO:     172.19.0.3:59620 - "GET /api/2.0/mlflow/experiments/get?experiment_id=1 HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:02:23 INFO:     172.19.0.4:52600 - "GET /api/2.0/mlflow/experiments/get-by-name?experiment_name=governed-data-agent HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:02:29 INFO:     172.19.0.3:57090 - "GET /api/3.0/mlflow/server-info HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:02:32 INFO:     172.19.0.3:57096 - "GET /version HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:02:34 INFO:     172.19.0.3:57110 - "POST /v1/traces HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:02:38 INFO:     172.19.0.3:57110 - "POST /v1/traces HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:02:40 INFO:     172.19.0.3:57110 - "POST /v1/traces HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:02:42 INFO:     172.19.0.3:57110 - "POST /v1/traces HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:02:46 INFO:     172.19.0.3:57110 - "POST /v1/traces HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:02:46 INFO:     172.19.0.3:33008 - "POST /api/3.0/mlflow/traces HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:02:49 INFO:     172.19.0.3:33008 - "POST /v1/traces HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:02:54 INFO:     172.19.0.3:33008 - "POST /v1/traces HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:02:56 INFO:     172.19.0.3:33008 - "POST /v1/traces HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:03:00 INFO:     172.19.0.3:33008 - "POST /v1/traces HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:03:02 INFO:     172.19.0.3:33008 - "POST /v1/traces HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:03:06 INFO:     172.19.0.3:33008 - "POST /v1/traces HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:03:06 INFO:     172.19.0.3:53294 - "POST /api/3.0/mlflow/traces HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:03:07 INFO:     172.19.0.3:53294 - "POST /v1/traces HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:03:09 INFO:     172.19.0.3:53294 - "POST /v1/traces HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:03:14 INFO:     172.19.0.3:53294 - "POST /v1/traces HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:03:18 INFO:     172.19.0.3:53294 - "POST /v1/traces HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:03:18 INFO:     172.19.0.3:51398 - "POST /v1/traces HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:03:18 INFO:     172.19.0.3:53294 - "POST /api/3.0/mlflow/traces HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:03:23 INFO:     172.19.0.3:53294 - "POST /v1/traces HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:03:31 INFO:     172.19.0.3:48566 - "POST /v1/traces HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:03:34 INFO:     172.19.0.3:48566 - "POST /v1/traces HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:03:39 INFO:     172.19.0.3:48566 - "POST /v1/traces HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:03:44 INFO:     172.19.0.3:48566 - "POST /v1/traces HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:03:49 INFO:     172.19.0.3:48566 - "POST /v1/traces HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:03:54 INFO:     172.19.0.3:48566 - "POST /v1/traces HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:03:59 INFO:     172.19.0.3:48566 - "POST /v1/traces HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:04:04 INFO:     172.19.0.3:48566 - "POST /v1/traces HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:04:14 INFO:     172.19.0.3:45864 - "POST /v1/traces HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:04:19 INFO:     172.19.0.3:45864 - "POST /v1/traces HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:04:22 INFO:     172.19.0.3:45864 - "POST /v1/traces HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:04:27 INFO:     172.19.0.3:45864 - "POST /v1/traces HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:04:27 INFO:     172.19.0.3:50542 - "POST /api/3.0/mlflow/traces HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:04:30 INFO:     172.19.0.3:45864 - "POST /v1/traces HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:04:30 INFO:     172.19.0.3:50542 - "POST /api/3.0/mlflow/traces HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:04:35 INFO:     172.19.0.3:50542 - "POST /v1/traces HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:04:35 INFO:     172.19.0.3:45864 - "POST /api/3.0/mlflow/traces HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:04:37 INFO:     127.0.0.1:36416 - "GET /api/2.0/mlflow/experiments/get-by-name?experiment_name=governed-data-agent HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:04:37 INFO:     127.0.0.1:36416 - "POST /api/3.0/mlflow/traces/search HTTP/1.1" 200 OK
+mlflow-1  | 2026/10/20 17:04:37 INFO:     127.0.0.1:36416 - "GET /api/3.0/mlflow/traces/batchGet?trace_ids=tr-6677532fae4ddd89dd02d90f29c4c91c&trace_ids=tr-0ea4afc9b4816aa23016bbd42eafd8c4&trace_ids=tr-f7a747ad4400a71b8344b6ed61237f4c&trace_ids=tr-d4ddc870aa6af40fb7dc36096a52b71e&trace_ids=tr-da7a9a76662ef931fc2477d6f067b218&trace_ids=tr-c693975ee93cca2d47ff96dcbdeb03af HTTP/1.1" 200 OK

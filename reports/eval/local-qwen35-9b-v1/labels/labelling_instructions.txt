@@ -1,0 +1,5 @@
+For each row, read the question, the reference facts (computed by hand-written SQL) and the answer.
+Write pass in human_label if the answer's figures agree with the facts (rounding is fine), its conclusion
+follows from them and answers the question, and it claims nothing the facts contradict or cannot support.
+Otherwise write fail. Judge substance, not style. Use human_note for anything unclear.
+Then run: data-agent eval judge-agreement --run <run>

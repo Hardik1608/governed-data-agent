@@ -1,0 +1,70 @@
+{
+ "warehouse": "sales_real_replay.duckdb",
+ "replica": "masked.duckdb",
+ "real_customer_ids": 5942,
+ "identifier_columns": [
+  {
+   "table": "dim_customer",
+   "column": "customer_id",
+   "non_null_values": 8906,
+   "raw_customer_ids": 0,
+   "values_not_tokenised": 0
+  },
+  {
+   "table": "dim_customer",
+   "column": "customer_sk",
+   "non_null_values": 8906,
+   "raw_customer_ids": 0,
+   "values_not_tokenised": 0
+  },
+  {
+   "table": "fct_order_lines",
+   "column": "customer_id",
+   "non_null_values": 797885,
+   "raw_customer_ids": 0,
+   "values_not_tokenised": 0
+  },
+  {
+   "table": "fct_order_lines",
+   "column": "customer_sk",
+   "non_null_values": 1033036,
+   "raw_customer_ids": 0,
+   "values_not_tokenised": 0
+  },
+  {
+   "table": "fct_order_lines",
+   "column": "order_line_id",
+   "non_null_values": 1033036,
+   "raw_customer_ids": 0,
+   "values_not_tokenised": 0
+  },
+  {
+   "table": "fct_orders",
+   "column": "customer_id",
+   "non_null_values": 44876,
+   "raw_customer_ids": 0,
+   "values_not_tokenised": 0
+  },
+  {
+   "table": "fct_orders",
+   "column": "customer_sk",
+   "non_null_values": 53628,
+   "raw_customer_ids": 0,
+   "values_not_tokenised": 0
+  }
+ ],
+ "raw_customer_ids_in_replica": 0,
+ "values_not_tokenised": 0,
+ "md5_key_attack": {
+  "formula": "customer_sk = md5(customer_id || '|' || ts), ts in (valid_from, first_invoice_at)",
+  "candidates_per_key": 5942,
+  "source_warehouse": {
+   "keys_attacked": 8905,
+   "keys_reidentified": 8725
+  },
+  "masked_replica": {
+   "keys_attacked": 8905,
+   "keys_reidentified": 0
+  }
+ }
+}

@@ -1,0 +1,209 @@
+# Certified metric definitions (the semantic layer the agent must use).
+#
+# Each metric has an aggregate expression over a fixed FROM/WHERE, plus a runnable example.
+# `tests/integration/test_metrics_layer.py` runs every example on the warehouse and checks
+# that the two sources (mart vs fact) agree where both exist.
+#
+# `terms` maps business words to metrics:
+#   - one metric, or a `default` with alternatives -> resolved without asking;
+#   - several metrics and no default -> competing definitions: the agent must get a human
+#     choice (LangGraph interrupt) before it may query.
+version: 1
+currency: GBP
+data_window: "2009-12-01 to 2011-12-09 (December 2011 is a partial month)"
+
+metrics:
+  net_revenue:
+    label: Net merchandise revenue (GBP)
+    description: Merchandise sales minus merchandise cancellations. The certified "revenue".
+    expression: SUM(f.line_revenue)
+    from: fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+    where: p.is_merchandise AND f.line_type IN ('sale', 'cancellation')
+    time_column: f.invoice_ts
+    monthly_source: mart_revenue_monthly.net_merchandise_revenue
+    example_sql: |
+      SELECT SUM(f.line_revenue) AS net_revenue
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation')
+        AND f.invoice_ts >= TIMESTAMP '2011-11-01' AND f.invoice_ts < TIMESTAMP '2011-12-01'
+    caveats:
+      - Excludes postage, fees, manual adjustments and bad debt (see total_net_amount).
+      - December 2011 is a partial month (data ends 2011-12-09).
+  gross_revenue:
+    label: Gross merchandise sales (GBP)
+    description: Merchandise sale lines only, before cancellations.
+    expression: SUM(f.line_revenue)
+    from: fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+    where: p.is_merchandise AND f.line_type = 'sale'
+    time_column: f.invoice_ts
+    monthly_source: mart_revenue_monthly.gross_merchandise_sales
+    example_sql: |
+      SELECT SUM(f.line_revenue) AS gross_revenue
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      WHERE p.is_merchandise AND f.line_type = 'sale'
+        AND f.invoice_ts >= TIMESTAMP '2011-01-01' AND f.invoice_ts < TIMESTAMP '2012-01-01'
+  cancelled_revenue:
+    label: Cancelled merchandise (GBP, negative)
+    description: Merchandise cancellation lines (negative amounts).
+    expression: SUM(f.line_revenue)
+    from: fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+    where: p.is_merchandise AND f.line_type = 'cancellation'
+    time_column: f.invoice_ts
+    monthly_source: mart_revenue_monthly.cancelled_merchandise
+    example_sql: |
+      SELECT SUM(f.line_revenue) AS cancelled_revenue
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      WHERE p.is_merchandise AND f.line_type = 'cancellation'
+        AND f.invoice_ts >= TIMESTAMP '2011-12-01' AND f.invoice_ts < TIMESTAMP '2012-01-01'
+  total_net_amount:
+    label: Total net amount (GBP)
+    description: Every line, including postage, fees, manual adjustments and bad debt. Reconciles to the ledger.
+    expression: SUM(f.line_revenue)
+    from: fct_order_lines f
+    where: "TRUE"
+    time_column: f.invoice_ts
+    monthly_source: mart_revenue_monthly.total_net_amount
+    example_sql: |
+      SELECT SUM(f.line_revenue) AS total_net_amount
+      FROM fct_order_lines f
+      WHERE f.invoice_ts >= TIMESTAMP '2011-01-01' AND f.invoice_ts < TIMESTAMP '2012-01-01'
+  orders:
+    label: Orders
+    description: Distinct invoices with at least one sale line.
+    expression: COUNT(DISTINCT f.invoice_id)
+    from: fct_order_lines f
+    where: f.line_type = 'sale'
+    time_column: f.invoice_ts
+    monthly_source: mart_revenue_monthly.n_orders
+    example_sql: |
+      SELECT COUNT(DISTINCT f.invoice_id) AS orders
+      FROM fct_order_lines f
+      WHERE f.line_type = 'sale'
+        AND f.invoice_ts >= TIMESTAMP '2011-11-01' AND f.invoice_ts < TIMESTAMP '2011-12-01'
+  active_customers:
+    label: Active customers
+    description: Distinct identified customers with at least one sale line in the period (guest checkouts excluded).
+    expression: COUNT(DISTINCT f.customer_id)
+    from: fct_order_lines f
+    where: f.line_type = 'sale' AND f.customer_id IS NOT NULL
+    time_column: f.invoice_ts
+    monthly_source: mart_revenue_monthly.n_active_customers
+    example_sql: |
+      SELECT COUNT(DISTINCT f.customer_id) AS active_customers
+      FROM fct_order_lines f
+      WHERE f.line_type = 'sale' AND f.customer_id IS NOT NULL
+        AND f.invoice_ts >= TIMESTAMP '2011-11-01' AND f.invoice_ts < TIMESTAMP '2011-12-01'
+  new_customers:
+    label: New customers
+    description: Customers whose first sale falls in the period (cohort size of the month).
+    expression: SUM(r.cohort_size)
+    from: mart_cohort_retention r
+    where: r.months_since_first_purchase = 0
+    time_column: r.cohort_month
+    example_sql: |
+      SELECT SUM(r.cohort_size) AS new_customers
+      FROM mart_cohort_retention r
+      WHERE r.months_since_first_purchase = 0
+        AND r.cohort_month >= DATE '2011-01-01' AND r.cohort_month < DATE '2012-01-01'
+    caveats:
+      - The December 2009 cohort is left-censored (it holds every customer whose history began before the data).
+  aov:
+    label: Average order value (GBP)
+    description: Net merchandise revenue divided by orders.
+    expression: SUM(CASE WHEN p.is_merchandise AND f.line_type IN ('sale', 'cancellation') THEN f.line_revenue ELSE 0 END) / COUNT(DISTINCT CASE WHEN f.line_type = 'sale' THEN f.invoice_id END)
+    from: fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+    where: "TRUE"
+    time_column: f.invoice_ts
+    monthly_source: mart_revenue_monthly.avg_order_value
+    example_sql: |
+      SELECT SUM(CASE WHEN p.is_merchandise AND f.line_type IN ('sale', 'cancellation') THEN f.line_revenue ELSE 0 END)
+             / COUNT(DISTINCT CASE WHEN f.line_type = 'sale' THEN f.invoice_id END) AS aov
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      WHERE f.invoice_ts >= TIMESTAMP '2011-11-01' AND f.invoice_ts < TIMESTAMP '2011-12-01'
+  units_sold:
+    label: Units sold
+    description: Units on merchandise sale lines (before cancellations).
+    expression: SUM(f.quantity)
+    from: fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+    where: p.is_merchandise AND f.line_type = 'sale'
+    time_column: f.invoice_ts
+    example_sql: |
+      SELECT SUM(f.quantity) AS units_sold
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      WHERE p.is_merchandise AND f.line_type = 'sale'
+        AND f.invoice_ts >= TIMESTAMP '2011-11-01' AND f.invoice_ts < TIMESTAMP '2011-12-01'
+  cancellation_rate_value:
+    label: Cancellation rate by value
+    description: Cancelled merchandise value as a share of gross merchandise sales (0.05 = 5%).
+    expression: -SUM(CASE WHEN f.line_type = 'cancellation' THEN f.line_revenue ELSE 0 END) / SUM(CASE WHEN f.line_type = 'sale' THEN f.line_revenue ELSE 0 END)
+    from: fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+    where: p.is_merchandise
+    time_column: f.invoice_ts
+    example_sql: |
+      SELECT -SUM(CASE WHEN f.line_type = 'cancellation' THEN f.line_revenue ELSE 0 END)
+             / SUM(CASE WHEN f.line_type = 'sale' THEN f.line_revenue ELSE 0 END) AS cancellation_rate_value
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      WHERE p.is_merchandise AND f.invoice_ts >= TIMESTAMP '2011-01-01' AND f.invoice_ts < TIMESTAMP '2012-01-01'
+  cancellation_rate_orders:
+    label: Cancellation rate by invoices
+    description: Cancellation invoices as a share of sale invoices (0.05 = 5%).
+    expression: COUNT(*) FILTER (WHERE o.invoice_type = 'cancellation') / COUNT(*) FILTER (WHERE o.invoice_type = 'sale')
+    from: fct_orders o
+    where: "TRUE"
+    time_column: o.invoice_ts
+    example_sql: |
+      SELECT COUNT(*) FILTER (WHERE o.invoice_type = 'cancellation')
+             / COUNT(*) FILTER (WHERE o.invoice_type = 'sale') AS cancellation_rate_orders
+      FROM fct_orders o
+      WHERE o.invoice_ts >= TIMESTAMP '2011-01-01' AND o.invoice_ts < TIMESTAMP '2012-01-01'
+  retention_rate:
+    label: Cohort retention rate
+    description: Share of an acquisition cohort that bought again N months after its first purchase.
+    expression: r.retention_rate
+    from: mart_cohort_retention r
+    where: "TRUE"
+    time_column: r.cohort_month
+    example_sql: |
+      SELECT r.cohort_month, r.retention_rate
+      FROM mart_cohort_retention r
+      WHERE r.months_since_first_purchase = 3 AND r.cohort_month = DATE '2011-01-01'
+  mom_growth:
+    label: Month-over-month growth of net revenue
+    description: (net revenue this month / net revenue previous month) - 1.
+    expression: m.mom_growth
+    from: mart_revenue_monthly m
+    where: "TRUE"
+    time_column: m.revenue_month
+    example_sql: |
+      SELECT m.revenue_month, m.mom_growth FROM mart_revenue_monthly m WHERE m.revenue_month = DATE '2011-11-01'
+  yoy_growth:
+    label: Year-over-year growth of net revenue
+    description: (net revenue this month / same month a year earlier) - 1.
+    expression: m.yoy_growth
+    from: mart_revenue_monthly m
+    where: "TRUE"
+    time_column: m.revenue_month
+    example_sql: |
+      SELECT m.revenue_month, m.yoy_growth FROM mart_revenue_monthly m WHERE m.revenue_month = DATE '2011-11-01'
+
+terms:
+  revenue: { default: net_revenue, alternatives: [gross_revenue, total_net_amount] }
+  sales: { default: net_revenue, alternatives: [gross_revenue, units_sold] }
+  turnover: { default: net_revenue, alternatives: [total_net_amount] }
+  net revenue: { default: net_revenue }
+  gross sales: { default: gross_revenue }
+  cancellations: { default: cancelled_revenue, alternatives: [cancellation_rate_value, cancellation_rate_orders] }
+  number of orders: { default: orders }
+  aov: { default: aov }
+  average order value: { default: aov }
+  basket value: { default: aov }
+  units: { default: units_sold }
+  active customers: { default: active_customers }
+  new customers: { default: new_customers }
+  retention: { default: retention_rate }
+  # Competing definitions: no default, a human must choose.
+  customers: { competing: [active_customers, new_customers] }
+  cancellation rate: { competing: [cancellation_rate_value, cancellation_rate_orders] }
+  growth: { competing: [mom_growth, yoy_growth] }
+  best-selling: { competing: [net_revenue, units_sold] }
+  top customers: { competing: [net_revenue, orders] }

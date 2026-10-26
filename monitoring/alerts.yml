@@ -1,0 +1,37 @@
+# Alert rules. Runbook: docs/DESIGN.md, section "Runbook".
+groups:
+  - name: governed-data-agent
+    rules:
+      - alert: UnsafeStatementReachedDatabase
+        # The database refused a write that the validator should have stopped. Must never fire.
+        expr: increase(data_agent_tool_calls_total{tool="run_sql",outcome="read_only_violation"}[5m]) > 0
+        labels: {severity: page}
+        annotations:
+          summary: A write/DDL statement passed the validator and was refused by the read-only replica.
+      - alert: PiiRedactionsSpike
+        expr: increase(data_agent_pii_redactions_total[15m]) > 5
+        labels: {severity: page}
+        annotations:
+          summary: The egress filter redacted many real customer identifiers; investigate the model or a prompt-injection attempt.
+      - alert: ModelServerErrors
+        expr: sum(rate(data_agent_llm_calls_total{outcome!="ok"}[5m])) / clamp_min(sum(rate(data_agent_llm_calls_total[5m])), 1e-9) > 0.2
+        for: 5m
+        labels: {severity: ticket}
+        annotations:
+          summary: More than 20% of model calls fail (timeouts, connection errors, 5xx).
+      - alert: QuestionLatencyHigh
+        expr: histogram_quantile(0.95, sum(rate(data_agent_question_seconds_bucket[10m])) by (le)) > 120
+        for: 10m
+        labels: {severity: ticket}
+        annotations:
+          summary: p95 time per question turn above 120 s.
+      - alert: BudgetStopsRising
+        expr: sum(increase(data_agent_budget_exceeded_total[30m])) > 10
+        labels: {severity: ticket}
+        annotations:
+          summary: Many questions stop on a budget (tokens, model calls, time or SQL); check the model and the prompts.
+      - alert: UntracedNumbers
+        expr: increase(data_agent_untraced_numbers_total[1h]) > 20
+        labels: {severity: ticket}
+        annotations:
+          summary: Answers contain numbers that no query produced (after repair rounds).

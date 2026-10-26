@@ -1,0 +1,113 @@
+{
+ "legitimate_queries": 220,
+ "legit_max_op": {
+  "median": 206607.0,
+  "p95": 1033036.0,
+  "max": 647498916.0
+ },
+ "legit_runtime_ms": {
+  "median": 23.4,
+  "p95": 158.6,
+  "max": 268.0
+ },
+ "thresholds": {
+  "approval_max_op": 1000000000.0,
+  "reject_max_op": 100000000000.0
+ },
+ "legit_needing_approval": 0,
+ "expensive": [
+  {
+   "query": "fact x fact cross product",
+   "max_op": 1067163377296.0,
+   "total": 2134328820664.0,
+   "outcome": "timeout (10 s)",
+   "runtime_ms": 10030.1
+  },
+  {
+   "query": "fact x customer cross product",
+   "max_op": 9200218616.0,
+   "total": 18401479174.0,
+   "outcome": "finished",
+   "runtime_ms": 2261.6
+  },
+  {
+   "query": "orders x orders cross product",
+   "max_op": 2875962384.0,
+   "total": 5752032024.0,
+   "outcome": "finished",
+   "runtime_ms": 2125.4
+  },
+  {
+   "query": "fact self-join on invoice",
+   "max_op": 193396770.0,
+   "total": 388859612.0,
+   "outcome": "finished",
+   "runtime_ms": 1370.1
+  },
+  {
+   "query": "orders x products cross product",
+   "max_op": 275165268.0,
+   "total": 550389295.0,
+   "outcome": "finished",
+   "runtime_ms": 215.6
+  }
+ ],
+ "top_legit": [
+  {
+   "item": "ms-003",
+   "which": "alt_sql",
+   "max_op": 647498916.0,
+   "total": 3238052991.0,
+   "runtime_ms": 55.9
+  },
+  {
+   "item": "ms-014",
+   "which": "alt_sql",
+   "max_op": 647498916.0,
+   "total": 2590554075.0,
+   "runtime_ms": 50.6
+  },
+  {
+   "item": "sm-050",
+   "which": "alt_sql",
+   "max_op": 647244481.0,
+   "total": 1943460572.0,
+   "runtime_ms": 145.5
+  },
+  {
+   "item": "ms-024",
+   "which": "gold_sql",
+   "max_op": 622184850.0,
+   "total": 624014099.0,
+   "runtime_ms": 192.2
+  },
+  {
+   "item": "ms-008",
+   "which": "alt_sql",
+   "max_op": 4981824.0,
+   "total": 14996244.0,
+   "runtime_ms": 27.6
+  },
+  {
+   "item": "ms-023",
+   "which": "gold_sql",
+   "max_op": 2403922.0,
+   "total": 12577063.0,
+   "runtime_ms": 131.4
+  },
+  {
+   "item": "ms-019",
+   "which": "alt_sql",
+   "max_op": 1685283.0,
+   "total": 9053086.0,
+   "runtime_ms": 142.9
+  },
+  {
+   "item": "sm-002",
+   "which": "alt_sql",
+   "max_op": 1033036.0,
+   "total": 1600787.0,
+   "runtime_ms": 33.0
+  }
+ ]
+}

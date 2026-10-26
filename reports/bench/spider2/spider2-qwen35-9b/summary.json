@@ -1,0 +1,30 @@
+{
+ "run": "spider2-qwen35-9b",
+ "model": "local-agent",
+ "local_tasks": 135,
+ "tasks_with_database": 135,
+ "modes": {
+  "single_shot": {
+   "n": 135,
+   "ex": 0.0444,
+   "tokens_per_task": 2130.8,
+   "llm_calls_per_task": 1.44,
+   "failed_or_no_sql": 61
+  },
+  "agent": {
+   "n": 135,
+   "ex": 0.2074,
+   "tokens_per_task": 41802.0,
+   "llm_calls_per_task": 8.69,
+   "failed_or_no_sql": 2
+  }
+ },
+ "paired": {
+  "n": 135,
+  "agent_minus_single_shot": 0.163,
+  "ci95": [
+   0.0963,
+   0.237
+  ]
+ }
+}

@@ -1,0 +1,20 @@
+{
+ "judged": 120,
+ "judge_pass_rate": 0.3833,
+ "agreement_with_numeric_grader": {
+  "n": 120,
+  "reference_pass": 49,
+  "reference_fail": 71,
+  "tpr": 0.8571,
+  "tpr_ci95": [
+   0.7333,
+   0.929
+  ],
+  "tnr": 0.9437,
+  "tnr_ci95": [
+   0.8639,
+   0.9779
+  ],
+  "accuracy": 0.9083
+ }
+}

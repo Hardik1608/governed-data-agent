@@ -1,0 +1,3 @@
+gda-stack-api-1 171.6MiB / 704MiB 0.06%
+gda-stack-mcp-1 191.5MiB / 576MiB 0.10%
+gda-stack-mlflow-1 0B / 0B 0.00%

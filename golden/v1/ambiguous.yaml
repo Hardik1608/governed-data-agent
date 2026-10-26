@@ -1,0 +1,187 @@
+# Golden set v1 - ambiguous questions (15). Correct behaviour: ASK before answering.
+#
+# Each item names the ambiguity and gives at least two reasonable interpretations as SQL.
+# tests/test_golden.py runs them on the warehouse and checks that the interpretations give
+# materially different answers (more than 5% apart, or different entities), so asking is
+# genuinely necessary. "Revenue" alone is NOT ambiguous here: the certified metric layer
+# defines it as net merchandise revenue; the ambiguity must be about something else.
+# A trial passes when the agent asks a clarifying question (planner clarification,
+# ask_user, or a metric-choice interrupt) instead of answering.
+category: ambiguous
+items:
+  - id: amb-001
+    question: What was revenue last month?
+    ambiguity: '"Last month" has no anchor - the data ends on 9 December 2011 (a partial month), and today is long after the data.'
+    interpretations:
+      - label: December 2011 (partial, last month with data)
+        sql: SELECT net_merchandise_revenue AS v FROM mart_revenue_monthly WHERE revenue_month = DATE '2011-12-01'
+      - label: November 2011 (last complete month)
+        sql: SELECT net_merchandise_revenue AS v FROM mart_revenue_monthly WHERE revenue_month = DATE '2011-11-01'
+
+  - id: amb-002
+    question: Who are our best customers?
+    ambiguity: Best by what - net revenue, number of orders, or recency - and over which period?
+    interpretations:
+      - label: Top customer by net merchandise revenue, all time
+        sql: |
+          SELECT arg_max(customer_id, r) AS v FROM (SELECT o.customer_id, SUM(o.merchandise_revenue) AS r FROM fct_orders o
+            WHERE o.invoice_type IN ('sale', 'cancellation') AND o.customer_id IS NOT NULL GROUP BY 1)
+      - label: Top customer by number of orders, all time
+        sql: |
+          SELECT arg_max(customer_id, n) AS v FROM (SELECT customer_id, COUNT(*) AS n FROM fct_orders
+            WHERE invoice_type = 'sale' AND customer_id IS NOT NULL GROUP BY 1)
+
+  - id: amb-003
+    question: How many customers do we have?
+    ambiguity: All customers ever seen, customers active in some period, or customers acquired in a period? The term 'customers' has competing definitions in the metric layer.
+    interpretations:
+      - label: All identified customers ever
+        sql: SELECT COUNT(DISTINCT customer_id) AS v FROM dim_customer WHERE customer_sk <> '-1'
+      - label: Active customers in 2011
+        sql: SELECT COUNT(DISTINCT customer_id) AS v FROM fct_order_lines WHERE line_type = 'sale' AND customer_id IS NOT NULL AND year(invoice_ts) = 2011
+      - label: New customers in 2011
+        sql: SELECT SUM(cohort_size) AS v FROM mart_cohort_retention WHERE months_since_first_purchase = 0 AND year(cohort_month) = 2011
+
+  - id: amb-004
+    question: What is our cancellation rate?
+    ambiguity: By value or by number of invoices (competing certified definitions), and for which period?
+    interpretations:
+      - label: By value, 2011
+        sql: SELECT -SUM(cancelled_merchandise) / SUM(gross_merchandise_sales) AS v FROM mart_revenue_monthly WHERE year(revenue_month) = 2011
+      - label: By invoices, 2011
+        sql: |
+          SELECT COUNT(*) FILTER (WHERE invoice_type = 'cancellation') / COUNT(*) FILTER (WHERE invoice_type = 'sale') AS v
+          FROM fct_orders WHERE year(invoice_ts) = 2011
+
+  - id: amb-005
+    question: How much did we grow?
+    ambiguity: No metric, no period and no growth basis (month-over-month vs year-over-year).
+    interpretations:
+      - label: Net revenue, latest complete month, month over month (Nov 2011)
+        sql: SELECT mom_growth AS v FROM mart_revenue_monthly WHERE revenue_month = DATE '2011-11-01'
+      - label: Net revenue, latest complete month, year over year (Nov 2011)
+        sql: SELECT yoy_growth AS v FROM mart_revenue_monthly WHERE revenue_month = DATE '2011-11-01'
+
+  - id: amb-006
+    question: What are our top products?
+    ambiguity: Ranked by net revenue or by units, and over which period?
+    interpretations:
+      - label: By net merchandise revenue, 2011
+        sql: |
+          SELECT arg_max(p.stock_code, r) AS v FROM (SELECT f.product_key, SUM(f.line_revenue) AS r FROM fct_order_lines f
+            WHERE f.line_type IN ('sale', 'cancellation') AND year(f.invoice_ts) = 2011 GROUP BY 1) x
+          JOIN dim_product p ON x.product_key = p.product_key WHERE p.is_merchandise
+      - label: By units sold, 2011
+        sql: |
+          SELECT arg_max(p.stock_code, u) AS v FROM (SELECT f.product_key, SUM(f.quantity) AS u FROM fct_order_lines f
+            WHERE f.line_type = 'sale' AND year(f.invoice_ts) = 2011 GROUP BY 1) x
+          JOIN dim_product p ON x.product_key = p.product_key WHERE p.is_merchandise
+
+  - id: amb-007
+    question: How are we doing in Europe?
+    ambiguity: Does "Europe" include the UK (the home market) or only the continent and Ireland? Which metric and period?
+    interpretations:
+      - label: Europe including the UK, net revenue 2011
+        sql: |
+          SELECT SUM(o.merchandise_revenue) AS v FROM fct_orders o JOIN dim_country c ON o.country_key = c.country_key
+          WHERE o.invoice_type IN ('sale', 'cancellation') AND year(o.invoice_ts) = 2011
+            AND c.region IN ('UK & Ireland', 'Western Europe', 'Southern Europe', 'Nordics', 'Central & Eastern Europe', 'Europe (unspecified)')
+      - label: Europe excluding the UK, net revenue 2011
+        sql: |
+          SELECT SUM(o.merchandise_revenue) AS v FROM fct_orders o JOIN dim_country c ON o.country_key = c.country_key
+          WHERE o.invoice_type IN ('sale', 'cancellation') AND year(o.invoice_ts) = 2011 AND NOT c.is_domestic_market
+            AND c.region IN ('UK & Ireland', 'Western Europe', 'Southern Europe', 'Nordics', 'Central & Eastern Europe', 'Europe (unspecified)')
+
+  - id: amb-008
+    question: What's the average order value?
+    ambiguity: The metric is certified, but the period is missing and AOV moves a lot by month (366 to 534 pounds in 2011).
+    interpretations:
+      - label: All data
+        sql: SELECT SUM(net_merchandise_revenue) / SUM(n_orders) AS v FROM mart_revenue_monthly
+      - label: Latest complete month (Nov 2011)
+        sql: SELECT avg_order_value AS v FROM mart_revenue_monthly WHERE revenue_month = DATE '2011-11-01'
+      - label: April 2011
+        sql: SELECT avg_order_value AS v FROM mart_revenue_monthly WHERE revenue_month = DATE '2011-04-01'
+
+  - id: amb-009
+    question: How many orders did we get in Q4?
+    ambiguity: Which year - Q4 2009 holds only December, Q4 2010 is complete, Q4 2011 ends on 9 December.
+    interpretations:
+      - label: Q4 2010
+        sql: SELECT SUM(n_orders) AS v FROM mart_revenue_monthly WHERE revenue_month BETWEEN DATE '2010-10-01' AND DATE '2010-12-01'
+      - label: Q4 2011 (partial)
+        sql: SELECT SUM(n_orders) AS v FROM mart_revenue_monthly WHERE revenue_month BETWEEN DATE '2011-10-01' AND DATE '2011-12-01'
+
+  - id: amb-010
+    question: What was revenue during the holiday season?
+    ambiguity: '"Holiday season" is not defined (November-December? December only?) and the year is not given.'
+    interpretations:
+      - label: November-December 2010
+        sql: SELECT SUM(net_merchandise_revenue) AS v FROM mart_revenue_monthly WHERE revenue_month IN (DATE '2010-11-01', DATE '2010-12-01')
+      - label: December 2010 only
+        sql: SELECT net_merchandise_revenue AS v FROM mart_revenue_monthly WHERE revenue_month = DATE '2010-12-01'
+
+  - id: amb-011
+    question: What's our retention rate?
+    ambiguity: Which acquisition cohort, and retention after how many months?
+    interpretations:
+      - label: January 2011 cohort after 1 month
+        sql: SELECT retention_rate AS v FROM mart_cohort_retention WHERE cohort_month = DATE '2011-01-01' AND months_since_first_purchase = 1
+      - label: December 2009 cohort after 12 months
+        sql: SELECT retention_rate AS v FROM mart_cohort_retention WHERE cohort_month = DATE '2009-12-01' AND months_since_first_purchase = 12
+
+  - id: amb-012
+    question: How much did our platinum customers spend in 2010?
+    ambiguity: Platinum at the time of the purchase, or platinum today? The SCD2 history changes the answer by about 68%.
+    interpretations:
+      - label: Tier at the time of sale
+        sql: |
+          SELECT SUM(o.merchandise_revenue) AS v FROM fct_orders o JOIN dim_customer c ON o.customer_sk = c.customer_sk
+          WHERE o.invoice_type IN ('sale', 'cancellation') AND year(o.invoice_ts) = 2010 AND c.loyalty_tier = 'platinum'
+      - label: Current tier
+        sql: |
+          SELECT SUM(o.merchandise_revenue) AS v FROM fct_orders o JOIN dim_customer c ON o.customer_id = c.customer_id AND c.is_current
+          WHERE o.invoice_type IN ('sale', 'cancellation') AND year(o.invoice_ts) = 2010 AND c.loyalty_tier = 'platinum'
+
+  - id: amb-013
+    question: How did the Christmas range sell?
+    ambiguity: There is no "Christmas range" in the catalogue (is it every product with CHRISTMAS in its description?), and no period or metric.
+    interpretations:
+      - label: CHRISTMAS products, net revenue, Q4 2010
+        sql: |
+          SELECT SUM(f.line_revenue) AS v FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+          WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation') AND p.product_description LIKE '%CHRISTMAS%'
+            AND f.invoice_ts >= TIMESTAMP '2010-10-01' AND f.invoice_ts < TIMESTAMP '2011-01-01'
+      - label: CHRISTMAS products, net revenue, Q4 2011
+        sql: |
+          SELECT SUM(f.line_revenue) AS v FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+          WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation') AND p.product_description LIKE '%CHRISTMAS%'
+            AND f.invoice_ts >= TIMESTAMP '2011-10-01' AND f.invoice_ts < TIMESTAMP '2012-01-01'
+
+  - id: amb-014
+    question: Compare this year with last year.
+    ambiguity: '"This year" relative to what (the data ends in 2011), which metric, and whether to compare full years or the same period (2011 has no data after 9 December).'
+    interpretations:
+      - label: Net revenue, full 2011 vs full 2010
+        sql: SELECT SUM(net_merchandise_revenue) FILTER (WHERE year(revenue_month) = 2011) / SUM(net_merchandise_revenue) FILTER (WHERE year(revenue_month) = 2010) - 1 AS v FROM mart_revenue_monthly
+      - label: Net revenue, same period (to 9 December) 2011 vs 2010
+        sql: |
+          SELECT SUM(f.line_revenue) FILTER (WHERE f.invoice_ts >= TIMESTAMP '2011-01-01' AND f.invoice_ts < TIMESTAMP '2011-12-10')
+                 / SUM(f.line_revenue) FILTER (WHERE f.invoice_ts >= TIMESTAMP '2010-01-01' AND f.invoice_ts < TIMESTAMP '2010-12-10') - 1 AS v
+          FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+          WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation')
+
+  - id: amb-015
+    question: What was the top-selling product in 2011?
+    ambiguity: '"Top-selling" by units or by revenue? By units, the 2011 leader (80,995 units of PAPER CRAFT, LITTLE BIRDIE) was cancelled the same day; by net revenue the leader is a different product.'
+    interpretations:
+      - label: By units on sale lines
+        sql: |
+          SELECT arg_max(p.stock_code, u) AS v FROM (SELECT f.product_key, SUM(f.quantity) AS u FROM fct_order_lines f
+            WHERE f.line_type = 'sale' AND year(f.invoice_ts) = 2011 GROUP BY 1) x JOIN dim_product p ON x.product_key = p.product_key
+          WHERE p.is_merchandise
+      - label: By net merchandise revenue
+        sql: |
+          SELECT arg_max(p.stock_code, r) AS v FROM (SELECT f.product_key, SUM(f.line_revenue) AS r FROM fct_order_lines f
+            WHERE f.line_type IN ('sale', 'cancellation') AND year(f.invoice_ts) = 2011 GROUP BY 1) x JOIN dim_product p ON x.product_key = p.product_key
+          WHERE p.is_merchandise

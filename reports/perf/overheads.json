@@ -1,0 +1,38 @@
+{
+ "queries": 220,
+ "validate_ms": {
+  "median": 14.68,
+  "p95": 30.15
+ },
+ "explain_ms": {
+  "median": 5.18,
+  "p95": 12.36
+ },
+ "execute_ms": {
+  "median": 27.65,
+  "p95": 165.17
+ },
+ "replica_builds": {
+  "masked": {
+   "seconds": 11.81,
+   "mb": 34.4
+  },
+  "clear": {
+   "seconds": 7.4,
+   "mb": 42.5
+  },
+  "aggregates": {
+   "seconds": 0.71,
+   "mb": 1.8
+  },
+  "masked_injection": {
+   "seconds": 5.21,
+   "mb": 34.6
+  }
+ },
+ "eval_run": "local-qwen35-9b-v1",
+ "model_calls": 2130,
+ "prompt_tokens_per_call": 3594.0,
+ "completion_tokens_per_call": 127.0,
+ "model_calls_per_trial": 3.8
+}

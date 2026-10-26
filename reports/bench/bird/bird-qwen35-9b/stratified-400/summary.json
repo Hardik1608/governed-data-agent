@@ -1,0 +1,77 @@
+{
+ "run": "bird-qwen35-9b",
+ "model": "local-agent",
+ "questions_in_set": 400,
+ "subset": true,
+ "stratified": true,
+ "temperature": 0.0,
+ "modes": {
+  "single_shot": {
+   "n": 1534,
+   "ex": 0.4915,
+   "by_difficulty": {
+    "simple": {
+     "n": 925,
+     "ex": 0.5503
+    },
+    "moderate": {
+     "n": 464,
+     "ex": 0.4052
+    },
+    "challenging": {
+     "n": 145,
+     "ex": 0.3931
+    }
+   },
+   "tokens_per_question": 1085.9,
+   "llm_calls_per_question": 1.12,
+   "latency_p50_s": 1.894,
+   "latency_p95_s": 8.963,
+   "no_sql_or_failed": 89,
+   "statuses": {
+    "ok": 1448,
+    "rejected": 82,
+    "exec_error": 4
+   }
+  },
+  "agent": {
+   "n": 400,
+   "ex": 0.5475,
+   "by_difficulty": {
+    "simple": {
+     "n": 241,
+     "ex": 0.5934
+    },
+    "moderate": {
+     "n": 122,
+     "ex": 0.4918
+    },
+    "challenging": {
+     "n": 37,
+     "ex": 0.4324
+    }
+   },
+   "tokens_per_question": 22136.8,
+   "llm_calls_per_question": 5.68,
+   "latency_p50_s": 28.087,
+   "latency_p95_s": 86.349,
+   "no_sql_or_failed": 3,
+   "statuses": {
+    "answered": 343,
+    "budget_exceeded": 57
+   }
+  }
+ },
+ "paired": {
+  "n": 400,
+  "agent_ex": 0.5475,
+  "single_shot_ex": 0.48,
+  "agent_minus_single_shot": 0.0675,
+  "ci95": [
+   0.02,
+   0.1125
+  ],
+  "agent_only_correct": 63,
+  "single_shot_only_correct": 36
+ }
+}

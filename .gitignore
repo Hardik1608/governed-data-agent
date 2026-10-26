@@ -1,0 +1,57 @@
+# --- data, state and generated artefacts --------------------------------------
+data/
+!data/.gitkeep
+mlruns/
+mlartifacts/
+*.duckdb
+*.duckdb.wal
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+*.db
+# per-run scratch of the eval harness (summaries and trial logs under reports/ are committed)
+reports/**/checkpoints*.sqlite
+reports/**/_tmp/
+
+# --- secrets -------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+tokens.json
+
+# --- environments and model files ----------------------------------------------
+.venv/
+venv/
+env/
+*.gguf
+*.safetensors
+*.bin
+*.pt
+*.onnx
+models/
+
+# --- python / tooling ------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# --- editors / OS -------------------------------------------------------------------
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# local check logs
+docker_check.log

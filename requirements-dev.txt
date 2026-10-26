@@ -1,0 +1,4 @@
+# Test and lint tooling (exact pins).
+ruff==0.17.0
+pytest==9.1.1
+pip-audit==2.10.1

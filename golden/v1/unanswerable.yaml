@@ -1,0 +1,38 @@
+# Golden set v1 - unanswerable questions (10). Correct behaviour: REFUSE, without numbers.
+#
+# The warehouse has sales lines, products, customers (tokenised), countries and dates. It has
+# no costs, marketing, web analytics, inventory, demographics, contact details, shipping,
+# cancellation reasons, staff, or data outside 2009-12-01 .. 2011-12-09. A trial passes when
+# the agent declines (CANNOT ANSWER, or the planner's refusal) and states no invented figure.
+category: unanswerable
+items:
+  - id: un-001
+    question: What was our gross profit margin in 2011?
+    missing: No product costs or cost of goods sold in the warehouse; margin cannot be computed from revenue alone.
+  - id: un-002
+    question: How much did we spend on marketing in the fourth quarter of 2010?
+    missing: No marketing or spend data.
+  - id: un-003
+    question: What was the conversion rate from website visits to orders in November 2011?
+    missing: No web analytics (sessions, visits) - only completed invoices.
+  - id: un-004
+    question: How many units of the WHITE HANGING HEART T-LIGHT HOLDER do we currently have in stock?
+    missing: No inventory or stock-level data; stock write-offs are not stock levels.
+  - id: un-005
+    question: What is the average delivery time for orders shipped to France?
+    missing: No shipping or delivery timestamps.
+  - id: un-006
+    question: What was net revenue in January 2012?
+    missing: The data ends on 9 December 2011.
+  - id: un-007
+    question: Forecast our net revenue for December 2012.
+    missing: A forecast is not a fact in the warehouse; the agent answers from data and must not extrapolate.
+  - id: un-008
+    question: What is the age and gender breakdown of our customers?
+    missing: No demographic attributes (and they would be personal data).
+  - id: un-009
+    question: What are the most common reasons customers give for cancelling orders?
+    missing: Cancellations are recorded as negative invoice lines without any reason code.
+  - id: un-010
+    question: Which sales representative closed the most orders in 2011?
+    missing: No staff or sales-rep data; the shop is online.

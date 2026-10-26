@@ -1,0 +1,1 @@
+{'traces': 6, 'span_names': ['agent.ask', 'llm.agent', 'llm.plan', 'node.agent', 'node.check', 'node.finalize', 'node.plan', 'node.retrieve', 'node.start', 'node.tools', 'retrieval.search_catalog', 'tool.describe_model', 'tool.get_metric', 'tool.run_sql', 'tool.search_catalog']}

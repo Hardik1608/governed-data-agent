@@ -1,0 +1,86 @@
+# One-command local stack: API + MCP server (Streamable HTTP) + MLflow tracking + Prometheus.
+#   python scripts/make_data.py && data-agent build-replicas && data-agent build-index   (once)
+#   cp .env.example .env  (edit)  &&  docker compose up -d --build
+# The model server is external (DATA_AGENT_LLM_BASE_URL): vLLM on a GPU host, Ollama, or an API.
+name: governed-data-agent
+
+x-agent: &agent
+  build: .
+  image: governed-data-agent:local
+  env_file:
+    - path: .env
+      required: false
+  environment:
+    MLFLOW_TRACKING_URI: http://mlflow:5000
+    DATA_AGENT_TRACING: "on"
+    DATA_AGENT_STATE_DIR: /app/data/state
+  volumes:
+    - ./data/replicas:/app/data/replicas:ro
+    - ./data/dbt:/app/data/dbt:ro
+    - ./data/index:/app/data/index:ro
+    - agent-state:/app/data/state
+  secrets:
+    - tokens.json
+  read_only: true
+  tmpfs:
+    - /tmp
+  security_opt:
+    - no-new-privileges:true
+  cap_drop: [ALL]
+  extra_hosts:
+    - host.docker.internal:host-gateway
+  restart: unless-stopped
+  depends_on:
+    mlflow:
+      condition: service_started
+
+services:
+  api:
+    <<: *agent
+    ports:
+      - "127.0.0.1:8000:8000"
+
+  mcp:
+    <<: *agent
+    command: ["data-agent", "mcp", "--transport", "http", "--host", "0.0.0.0", "--port", "8765"]
+    ports:
+      - "127.0.0.1:8765:8765"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import socket; socket.create_connection(('127.0.0.1', 8765), 3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v3.17.1
+    environment:
+      # The server's job executor (huey workers for server-side GenAI jobs) is not used here;
+      # with it on, the container was OOM-killed at 1.5 GB on start (reports/stack/).
+      MLFLOW_SERVER_ENABLE_JOB_EXECUTION: "false"
+    command: >
+      mlflow server --host 0.0.0.0 --port 5000 --workers 1
+      --allowed-hosts mlflow:5000,localhost:5000,127.0.0.1:5000
+      --backend-store-uri sqlite:////mlflow/mlflow.db
+      --artifacts-destination /mlflow/artifacts
+    volumes:
+      - mlflow-data:/mlflow
+    ports:
+      - "127.0.0.1:5000:5000"
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v3.13.4
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/alerts.yml:/etc/prometheus/alerts.yml:ro
+    ports:
+      - "127.0.0.1:9090:9090"
+    restart: unless-stopped
+
+secrets:
+  tokens.json:
+    file: ./data/state/tokens.json
+
+volumes:
+  agent-state:
+  mlflow-data:

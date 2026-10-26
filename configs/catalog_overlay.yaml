@@ -1,0 +1,120 @@
+# Definitions the dbt YAML leaves undocumented. Each entry is taken from the model SQL or its
+# comments in sales-analytics-platform (warehouse/models/**.sql, macros/business_rules.sql,
+# docs/DATA_MODEL.md), so the agent learns what a column means without reading SQL.
+# Money is GBP throughout (UCI Online Retail II is a UK online retailer).
+models:
+  fct_order_lines:
+    grain: one row per distinct invoice line (1 invoice has many lines)
+    columns:
+      invoice_id: Invoice number. Prefix 'C' = cancellation invoice, 'A' = bad-debt adjustment.
+      date_key: Invoice date as an integer yyyymmdd; joins dim_date.date_key.
+      customer_sk: >
+        Customer *version* (SCD2) valid at invoice_ts; joins dim_customer.customer_sk. Gives the
+        loyalty tier and country the customer had at the time of sale. '-1' = guest checkout.
+      customer_id: Customer identifier (tokenised); NULL for guest checkouts.
+      product_key: Joins dim_product.product_key.
+      country_key: Country of the invoice (shipping country); joins dim_country.country_key.
+      invoice_ts: Invoice timestamp (one timestamp per invoice). Data covers 2009-12-01 to 2011-12-09.
+      line_type: "'sale', 'cancellation' (negative quantity and revenue), 'stock_write_off' (inventory write-off, priced 0) or 'bad_debt_adjustment'."
+      quantity: Units on the line; negative for cancellations and write-offs.
+      unit_price: Price per unit in GBP.
+      line_revenue: quantity * unit_price in GBP (negative for cancellations). Sum over merchandise lines with line_type in ('sale','cancellation') = net merchandise revenue.
+      is_quantity_outlier: True when |quantity| >= 10,000 (15 bulk lines in the real data).
+      _batch_id: Load batch (monthly file) that delivered the line. Lineage only.
+      _ingested_at: Load timestamp (incremental watermark). Lineage only; use invoice_ts for business time.
+    notes:
+      - Includes non-merchandise lines (postage, fees, manual adjustments); join dim_product and filter is_merchandise = true for product revenue.
+      - Revenue by customer tier at the time of sale = join dim_customer on customer_sk; by the customer's current tier = join on customer_id with is_current.
+  fct_orders:
+    grain: one row per invoice
+    description: >
+      Order (invoice) grain aggregate of fct_order_lines, for order-level questions (order
+      counts, average order value, basket size).
+    columns:
+      invoice_id: Invoice number (unique).
+      customer_sk: Customer version at invoice time; joins dim_customer.customer_sk.
+      customer_id: Customer identifier (tokenised); NULL for guest checkouts.
+      country_key: Joins dim_country.country_key.
+      date_key: Invoice date yyyymmdd; joins dim_date.date_key.
+      invoice_ts: Invoice timestamp.
+      invoice_type: "'sale', 'cancellation', 'bad_debt_adjustment' or 'stock_write_off'."
+      n_lines: Number of lines on the invoice.
+      n_distinct_products: Distinct products on the invoice.
+      total_units: Sum of quantity over the invoice's lines.
+      invoice_revenue: Sum of line_revenue over all lines, including postage and fees (GBP).
+      merchandise_revenue: Sum of line_revenue over merchandise lines only (GBP).
+      has_quantity_outlier: True when any line is a bulk-quantity outlier.
+  dim_customer:
+    grain: one row per customer version (SCD Type 2); about 5,900 customers, 8,900 versions
+    columns:
+      customer_sk: Surrogate key of the version (re-keyed). Facts store the version valid at invoice time.
+      customer_id: Customer identifier (tokenised). Several rows per customer, one per version.
+      country_name: Country of the customer's most recent invoice as of this version.
+      loyalty_tier: "Tier from cumulative net merchandise spend in GBP: bronze < 1,000 <= silver < 5,000 <= gold < 20,000 <= platinum. 'unknown' = guest member '-1'."
+      version_number: 1 = first version.
+      valid_from: Inclusive start of validity; version 1 starts 1900-01-01.
+      valid_to: Exclusive end of validity; 9999-12-31 for the current version.
+      is_current: True for the current version of each customer. Filter on it to count customers once.
+      first_invoice_at: Timestamp of the customer's first invoice.
+    notes:
+      - To count customers, use count(distinct customer_id) or filter is_current = true; counting rows counts versions.
+  dim_product:
+    grain: one row per stock code
+    columns:
+      product_key: Surrogate key; joins fct_order_lines.product_key.
+      stock_code: Product code from the source system (e.g. 85123A).
+      product_description: Canonical description (the one most used on priced sale lines). Free text from the source system.
+      product_category: "'merchandise' or a non-product category: postage, fee, manual_adjustment, gift_voucher, discount, samples, test, bad_debt."
+      is_merchandise: True for real products. Revenue metrics count merchandise only.
+      avg_sale_price: Average unit price over priced sale lines (GBP).
+      first_seen_at: First invoice with this product.
+      last_seen_at: Last invoice with this product.
+  dim_country:
+    grain: one row per country (43)
+    columns:
+      country_key: Surrogate key; joins the facts.
+      country_name: Country as it appears in the source (e.g. 'United Kingdom', 'EIRE' = Ireland, 'RSA' = South Africa, 'USA').
+      iso_alpha2: ISO 3166 alpha-2 code (NULL for Channel Islands, European Community, Unspecified, West Indies).
+      region: "Sales region: 'UK & Ireland', 'Western Europe', 'Southern Europe', 'Nordics', 'Central & Eastern Europe', 'Europe (unspecified)', 'Americas', 'Asia Pacific', 'Middle East', 'Africa', 'Unknown'."
+      is_domestic_market: True only for United Kingdom.
+      has_sales: True when the country has at least one invoice.
+  dim_date:
+    grain: one row per calendar day, 2009-01-01 to 2012-12-31
+    columns:
+      date_key: Integer yyyymmdd.
+      date_day: The date.
+      calendar_year: Year.
+      calendar_quarter: Quarter 1-4.
+      month_of_year: Month 1-12.
+      month_name: Month name (January ...).
+      year_month: Text 'YYYY-MM'.
+      first_day_of_month: First day of the month (date).
+      day_of_month: Day 1-31.
+      day_of_week_iso: 1 = Monday ... 7 = Sunday.
+      day_name: Day name (Monday ...).
+      is_weekend: True on Saturday and Sunday.
+  mart_revenue_monthly:
+    grain: one row per calendar month, 2009-12 to 2011-12
+    columns:
+      revenue_month: First day of the month (date).
+      n_orders: Distinct sale invoices in the month.
+      n_active_customers: Distinct customers with a sale line in the month (guests excluded).
+      gross_merchandise_sales: Merchandise sale lines, GBP.
+      cancelled_merchandise: Merchandise cancellation lines, GBP (negative).
+      net_merchandise_revenue: gross_merchandise_sales + cancelled_merchandise, GBP. The certified "revenue".
+      non_merchandise_amount: Postage, fees, manual adjustments, bad debt, vouchers, GBP.
+      total_net_amount: Everything (net merchandise + non-merchandise), GBP. Reconciles to sum(fct_order_lines.line_revenue).
+      avg_order_value: net_merchandise_revenue / n_orders, GBP.
+      mom_growth: Month-over-month growth of net_merchandise_revenue (0.10 = +10%).
+      yoy_growth: Growth vs the same month a year earlier (NULL in the first 12 months).
+      ytd_net_revenue: Year-to-date net merchandise revenue, GBP.
+      is_partial_month: True when the data ends before the month does (December 2011 ends on 2011-12-09).
+  mart_cohort_retention:
+    grain: one row per (acquisition cohort month, months since first purchase)
+    columns:
+      cohort_month: Month of the customer's first sale (date).
+      months_since_first_purchase: 0 = the cohort month itself.
+      cohort_size: Customers whose first sale was in cohort_month.
+      active_customers: Cohort customers who bought in that month.
+      retention_rate: active_customers / cohort_size (0..1).
+      is_left_censored_cohort: True for the first cohort (Dec 2009), which holds every customer whose history began before the data did.

@@ -1,0 +1,909 @@
+{
+ "source": "dbt 1.12.5 artifacts",
+ "models": {
+  "dim_country": {
+   "name": "dim_country",
+   "description": "Country dimension (reference seed + observed countries).",
+   "columns": [
+    {
+     "name": "country_key",
+     "data_type": "VARCHAR",
+     "description": "Surrogate key; joins the facts.",
+     "tests": [
+      "not_null",
+      "unique"
+     ],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "country_name",
+     "data_type": "VARCHAR",
+     "description": "Country as it appears in the source (e.g. 'United Kingdom', 'EIRE' = Ireland, 'RSA' = South Africa, 'USA').",
+     "tests": [
+      "not_null",
+      "unique"
+     ],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "iso_alpha2",
+     "data_type": "VARCHAR",
+     "description": "ISO 3166 alpha-2 code (NULL for Channel Islands, European Community, Unspecified, West Indies).",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "region",
+     "data_type": "VARCHAR",
+     "description": "Sales region: 'UK & Ireland', 'Western Europe', 'Southern Europe', 'Nordics', 'Central & Eastern Europe', 'Europe (unspecified)', 'Americas', 'Asia Pacific', 'Middle East', 'Africa', 'Unknown'.",
+     "tests": [
+      "accepted_values ['UK & Ireland', 'Western Europe', 'Southern Europe', 'Nordics', 'Central & Eastern Europe', 'Europe (unspecified)', 'Americas', 'Asia Pacific', 'Middle East', 'Africa', 'Unknown']"
+     ],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "is_domestic_market",
+     "data_type": "BOOLEAN",
+     "description": "True only for United Kingdom.",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "has_sales",
+     "data_type": "BOOLEAN",
+     "description": "True when the country has at least one invoice.",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    }
+   ],
+   "materialization": "table",
+   "tags": [
+    "star_schema"
+   ],
+   "grain": "one row per country (43)",
+   "depends_on": [
+    "country_reference",
+    "int_order_lines__deduplicated"
+   ],
+   "model_tests": [],
+   "notes": [],
+   "row_count": 43
+  },
+  "dim_customer": {
+   "name": "dim_customer",
+   "description": "Customer dimension, SCD Type 2 on (country_name, loyalty_tier); one row per version. Built from snap_customer_state; includes an unknown member ('-1').",
+   "columns": [
+    {
+     "name": "customer_sk",
+     "data_type": "VARCHAR",
+     "description": "Surrogate key of the version (re-keyed). Facts store the version valid at invoice time.",
+     "tests": [
+      "not null",
+      "primary key",
+      "unique"
+     ],
+     "pii": false,
+     "masking": "re-keyed (opaque join key; the dbt md5 key is re-identifiable)"
+    },
+    {
+     "name": "customer_id",
+     "data_type": "VARCHAR",
+     "description": "Customer identifier (tokenised). Several rows per customer, one per version.",
+     "tests": [
+      "not null"
+     ],
+     "pii": true,
+     "masking": "tokenised as cust_<hash> for analyst/viewer; clear only with approval"
+    },
+    {
+     "name": "country_name",
+     "data_type": "VARCHAR",
+     "description": "Country of the customer's most recent invoice as of this version.",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "loyalty_tier",
+     "data_type": "VARCHAR",
+     "description": "Tier from cumulative net merchandise spend in GBP: bronze < 1,000 <= silver < 5,000 <= gold < 20,000 <= platinum. 'unknown' = guest member '-1'.",
+     "tests": [
+      "accepted_values ['bronze', 'silver', 'gold', 'platinum', 'unknown']"
+     ],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "version_number",
+     "data_type": "INTEGER",
+     "description": "1 = first version.",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "valid_from",
+     "data_type": "TIMESTAMP",
+     "description": "Inclusive start of validity; version 1 starts 1900-01-01.",
+     "tests": [
+      "not null"
+     ],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "valid_to",
+     "data_type": "TIMESTAMP",
+     "description": "Exclusive end of validity; 9999-12-31 for the current version.",
+     "tests": [
+      "not null"
+     ],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "is_current",
+     "data_type": "BOOLEAN",
+     "description": "True for the current version of each customer. Filter on it to count customers once.",
+     "tests": [
+      "not null"
+     ],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "first_invoice_at",
+     "data_type": "TIMESTAMP",
+     "description": "Timestamp of the customer's first invoice.",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    }
+   ],
+   "materialization": "table",
+   "tags": [
+    "star_schema"
+   ],
+   "grain": "one row per customer version (SCD Type 2); about 5,900 customers, 8,900 versions",
+   "depends_on": [
+    "snap_customer_state"
+   ],
+   "model_tests": [
+    "assert_dim_customer_scd2_integrity",
+    "assert_fact_points_to_customer_version_valid_at_invoice_time",
+    "unique (customer_id, valid_from)"
+   ],
+   "notes": [
+    "To count customers, use count(distinct customer_id) or filter is_current = true; counting rows counts versions."
+   ],
+   "row_count": 8906
+  },
+  "dim_date": {
+   "name": "dim_date",
+   "description": "Calendar dimension, one row per day 2009-01-01..2012-12-31.",
+   "columns": [
+    {
+     "name": "date_key",
+     "data_type": "INTEGER",
+     "description": "Integer yyyymmdd.",
+     "tests": [
+      "not_null",
+      "unique"
+     ],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "date_day",
+     "data_type": "DATE",
+     "description": "The date.",
+     "tests": [
+      "not_null",
+      "unique"
+     ],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "calendar_year",
+     "data_type": "INTEGER",
+     "description": "Year.",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "calendar_quarter",
+     "data_type": "INTEGER",
+     "description": "Quarter 1-4.",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "month_of_year",
+     "data_type": "INTEGER",
+     "description": "Month 1-12.",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "month_name",
+     "data_type": "VARCHAR",
+     "description": "Month name (January ...).",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "year_month",
+     "data_type": "VARCHAR",
+     "description": "Text 'YYYY-MM'.",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "first_day_of_month",
+     "data_type": "DATE",
+     "description": "First day of the month (date).",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "day_of_month",
+     "data_type": "INTEGER",
+     "description": "Day 1-31.",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "day_of_week_iso",
+     "data_type": "INTEGER",
+     "description": "1 = Monday ... 7 = Sunday.",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "day_name",
+     "data_type": "VARCHAR",
+     "description": "Day name (Monday ...).",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "is_weekend",
+     "data_type": "BOOLEAN",
+     "description": "True on Saturday and Sunday.",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    }
+   ],
+   "materialization": "table",
+   "tags": [
+    "star_schema"
+   ],
+   "grain": "one row per calendar day, 2009-01-01 to 2012-12-31",
+   "depends_on": [],
+   "model_tests": [],
+   "notes": [],
+   "row_count": 1461
+  },
+  "dim_product": {
+   "name": "dim_product",
+   "description": "Product dimension (SCD Type 1), one row per stock code.",
+   "columns": [
+    {
+     "name": "product_key",
+     "data_type": "VARCHAR",
+     "description": "Surrogate key; joins fct_order_lines.product_key.",
+     "tests": [
+      "not null",
+      "primary key",
+      "unique"
+     ],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "stock_code",
+     "data_type": "VARCHAR",
+     "description": "Product code from the source system (e.g. 85123A).",
+     "tests": [
+      "not null",
+      "unique"
+     ],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "product_description",
+     "data_type": "VARCHAR",
+     "description": "Canonical description (the one most used on priced sale lines). Free text from the source system.",
+     "tests": [
+      "not null"
+     ],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "product_category",
+     "data_type": "VARCHAR",
+     "description": "'merchandise' or a non-product category: postage, fee, manual_adjustment, gift_voucher, discount, samples, test, bad_debt.",
+     "tests": [
+      "not null"
+     ],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "is_merchandise",
+     "data_type": "BOOLEAN",
+     "description": "True for real products. Revenue metrics count merchandise only.",
+     "tests": [
+      "not null"
+     ],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "avg_sale_price",
+     "data_type": "DECIMAL(12,3)",
+     "description": "Average unit price over priced sale lines (GBP).",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "first_seen_at",
+     "data_type": "TIMESTAMP",
+     "description": "First invoice with this product.",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "last_seen_at",
+     "data_type": "TIMESTAMP",
+     "description": "Last invoice with this product.",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    }
+   ],
+   "materialization": "table",
+   "tags": [
+    "star_schema"
+   ],
+   "grain": "one row per stock code",
+   "depends_on": [
+    "int_order_lines__deduplicated"
+   ],
+   "model_tests": [],
+   "notes": [],
+   "row_count": 5131
+  },
+  "fct_order_lines": {
+   "name": "fct_order_lines",
+   "description": "Transaction fact at invoice-line grain (incremental, unique_key = order_line_id). Includes sales, cancellations (negative quantities), stock write-offs and non-product lines so revenue reconciles to silver to the penny; filter with line_type and dim_product.is_merchandise.",
+   "columns": [
+    {
+     "name": "order_line_id",
+     "data_type": "VARCHAR",
+     "description": "",
+     "tests": [
+      "not null",
+      "primary key",
+      "unique"
+     ],
+     "pii": false,
+     "masking": "re-keyed (opaque join key; the dbt md5 key is re-identifiable)"
+    },
+    {
+     "name": "invoice_id",
+     "data_type": "VARCHAR",
+     "description": "Invoice number. Prefix 'C' = cancellation invoice, 'A' = bad-debt adjustment.",
+     "tests": [
+      "not null"
+     ],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "date_key",
+     "data_type": "INTEGER",
+     "description": "Invoice date as an integer yyyymmdd; joins dim_date.date_key.",
+     "tests": [
+      "not null",
+      "relationship -> dim_date.date_key"
+     ],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "customer_sk",
+     "data_type": "VARCHAR",
+     "description": "Customer *version* (SCD2) valid at invoice_ts; joins dim_customer.customer_sk. Gives the loyalty tier and country the customer had at the time of sale. '-1' = guest checkout.",
+     "tests": [
+      "not null",
+      "relationship -> dim_customer.customer_sk"
+     ],
+     "pii": false,
+     "masking": "re-keyed (opaque join key; the dbt md5 key is re-identifiable)"
+    },
+    {
+     "name": "customer_id",
+     "data_type": "VARCHAR",
+     "description": "Customer identifier (tokenised); NULL for guest checkouts.",
+     "tests": [],
+     "pii": true,
+     "masking": "tokenised as cust_<hash> for analyst/viewer; clear only with approval"
+    },
+    {
+     "name": "product_key",
+     "data_type": "VARCHAR",
+     "description": "Joins dim_product.product_key.",
+     "tests": [
+      "not null",
+      "relationship -> dim_product.product_key"
+     ],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "country_key",
+     "data_type": "VARCHAR",
+     "description": "Country of the invoice (shipping country); joins dim_country.country_key.",
+     "tests": [
+      "not null",
+      "relationship -> dim_country.country_key"
+     ],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "invoice_ts",
+     "data_type": "TIMESTAMP",
+     "description": "Invoice timestamp (one timestamp per invoice). Data covers 2009-12-01 to 2011-12-09.",
+     "tests": [
+      "not null"
+     ],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "line_type",
+     "data_type": "VARCHAR",
+     "description": "'sale', 'cancellation' (negative quantity and revenue), 'stock_write_off' (inventory write-off, priced 0) or 'bad_debt_adjustment'.",
+     "tests": [
+      "accepted_values ['sale', 'cancellation', 'bad_debt_adjustment', 'stock_write_off']",
+      "not null"
+     ],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "quantity",
+     "data_type": "INTEGER",
+     "description": "Units on the line; negative for cancellations and write-offs.",
+     "tests": [
+      "not null"
+     ],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "unit_price",
+     "data_type": "DECIMAL(12,3)",
+     "description": "Price per unit in GBP.",
+     "tests": [
+      "not null"
+     ],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "line_revenue",
+     "data_type": "DECIMAL(18,3)",
+     "description": "quantity * unit_price in GBP (negative for cancellations). Sum over merchandise lines with line_type in ('sale','cancellation') = net merchandise revenue.",
+     "tests": [
+      "not null"
+     ],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "is_quantity_outlier",
+     "data_type": "BOOLEAN",
+     "description": "True when |quantity| >= 10,000 (15 bulk lines in the real data).",
+     "tests": [
+      "not null"
+     ],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "_batch_id",
+     "data_type": "VARCHAR",
+     "description": "Load batch (monthly file) that delivered the line. Lineage only.",
+     "tests": [
+      "not null"
+     ],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "_ingested_at",
+     "data_type": "TIMESTAMP",
+     "description": "Load timestamp (incremental watermark). Lineage only; use invoice_ts for business time.",
+     "tests": [
+      "not null"
+     ],
+     "pii": false,
+     "masking": ""
+    }
+   ],
+   "materialization": "incremental",
+   "tags": [
+    "star_schema"
+   ],
+   "grain": "one row per distinct invoice line (1 invoice has many lines)",
+   "depends_on": [
+    "int_order_lines__deduplicated",
+    "dim_customer",
+    "dim_product",
+    "dim_country"
+   ],
+   "model_tests": [
+    "assert_churn_labels_have_complete_horizon",
+    "assert_fact_points_to_customer_version_valid_at_invoice_time",
+    "assert_fact_reconciles_to_silver",
+    "assert_monthly_mart_reconciles_to_fact"
+   ],
+   "notes": [
+    "Includes non-merchandise lines (postage, fees, manual adjustments); join dim_product and filter is_merchandise = true for product revenue.",
+    "Revenue by customer tier at the time of sale = join dim_customer on customer_sk; by the customer's current tier = join on customer_id with is_current."
+   ],
+   "row_count": 1033036
+  },
+  "fct_orders": {
+   "name": "fct_orders",
+   "description": "Order (invoice) grain aggregate of fct_order_lines, for order-level questions (order counts, average order value, basket size).",
+   "columns": [
+    {
+     "name": "invoice_id",
+     "data_type": "VARCHAR",
+     "description": "Invoice number (unique).",
+     "tests": [
+      "not_null",
+      "unique"
+     ],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "customer_sk",
+     "data_type": "VARCHAR",
+     "description": "Customer version at invoice time; joins dim_customer.customer_sk.",
+     "tests": [
+      "not_null",
+      "relationship -> dim_customer.customer_sk"
+     ],
+     "pii": false,
+     "masking": "re-keyed (opaque join key; the dbt md5 key is re-identifiable)"
+    },
+    {
+     "name": "customer_id",
+     "data_type": "VARCHAR",
+     "description": "Customer identifier (tokenised); NULL for guest checkouts.",
+     "tests": [],
+     "pii": true,
+     "masking": "tokenised as cust_<hash> for analyst/viewer; clear only with approval"
+    },
+    {
+     "name": "country_key",
+     "data_type": "VARCHAR",
+     "description": "Joins dim_country.country_key.",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "date_key",
+     "data_type": "INTEGER",
+     "description": "Invoice date yyyymmdd; joins dim_date.date_key.",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "invoice_ts",
+     "data_type": "TIMESTAMP",
+     "description": "Invoice timestamp.",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "invoice_type",
+     "data_type": "VARCHAR",
+     "description": "'sale', 'cancellation', 'bad_debt_adjustment' or 'stock_write_off'.",
+     "tests": [
+      "accepted_values ['sale', 'cancellation', 'bad_debt_adjustment', 'stock_write_off']"
+     ],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "n_lines",
+     "data_type": "INTEGER",
+     "description": "Number of lines on the invoice.",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "n_distinct_products",
+     "data_type": "INTEGER",
+     "description": "Distinct products on the invoice.",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "total_units",
+     "data_type": "BIGINT",
+     "description": "Sum of quantity over the invoice's lines.",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "invoice_revenue",
+     "data_type": "DECIMAL(18,3)",
+     "description": "Sum of line_revenue over all lines, including postage and fees (GBP).",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "merchandise_revenue",
+     "data_type": "DECIMAL(18,3)",
+     "description": "Sum of line_revenue over merchandise lines only (GBP).",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "has_quantity_outlier",
+     "data_type": "BOOLEAN",
+     "description": "True when any line is a bulk-quantity outlier.",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    }
+   ],
+   "materialization": "table",
+   "tags": [
+    "star_schema"
+   ],
+   "grain": "one row per invoice",
+   "depends_on": [
+    "fct_order_lines",
+    "dim_product"
+   ],
+   "model_tests": [],
+   "notes": [],
+   "row_count": 53628
+  },
+  "mart_cohort_retention": {
+   "name": "mart_cohort_retention",
+   "description": "Acquisition-cohort retention matrix in long format.",
+   "columns": [
+    {
+     "name": "cohort_month",
+     "data_type": "DATE",
+     "description": "Month of the customer's first sale (date).",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "months_since_first_purchase",
+     "data_type": "INTEGER",
+     "description": "0 = the cohort month itself.",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "cohort_size",
+     "data_type": "BIGINT",
+     "description": "Customers whose first sale was in cohort_month.",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "active_customers",
+     "data_type": "BIGINT",
+     "description": "Cohort customers who bought in that month.",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "retention_rate",
+     "data_type": "DOUBLE",
+     "description": "active_customers / cohort_size (0..1).",
+     "tests": [
+      "range [0, 1]"
+     ],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "is_left_censored_cohort",
+     "data_type": "BOOLEAN",
+     "description": "True for the first cohort (Dec 2009), which holds every customer whose history began before the data did.",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    }
+   ],
+   "materialization": "table",
+   "tags": [
+    "analytics"
+   ],
+   "grain": "one row per (acquisition cohort month, months since first purchase)",
+   "depends_on": [
+    "fct_order_lines"
+   ],
+   "model_tests": [
+    "unique (cohort_month, months_since_first_purchase)"
+   ],
+   "notes": [],
+   "row_count": 325
+  },
+  "mart_revenue_monthly": {
+   "name": "mart_revenue_monthly",
+   "description": "Monthly revenue KPIs (gross, cancellations, net, AOV) with MoM / YoY growth.",
+   "columns": [
+    {
+     "name": "revenue_month",
+     "data_type": "DATE",
+     "description": "First day of the month (date).",
+     "tests": [
+      "not_null",
+      "unique"
+     ],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "n_orders",
+     "data_type": "BIGINT",
+     "description": "Distinct sale invoices in the month.",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "n_active_customers",
+     "data_type": "BIGINT",
+     "description": "Distinct customers with a sale line in the month (guests excluded).",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "gross_merchandise_sales",
+     "data_type": "DECIMAL(18,2)",
+     "description": "Merchandise sale lines, GBP.",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "cancelled_merchandise",
+     "data_type": "DECIMAL(18,2)",
+     "description": "Merchandise cancellation lines, GBP (negative).",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "net_merchandise_revenue",
+     "data_type": "DECIMAL(18,2)",
+     "description": "gross_merchandise_sales + cancelled_merchandise, GBP. The certified \"revenue\".",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "non_merchandise_amount",
+     "data_type": "DECIMAL(18,2)",
+     "description": "Postage, fees, manual adjustments, bad debt, vouchers, GBP.",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "total_net_amount",
+     "data_type": "DECIMAL(18,3)",
+     "description": "Everything (net merchandise + non-merchandise), GBP. Reconciles to sum(fct_order_lines.line_revenue).",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "avg_order_value",
+     "data_type": "DECIMAL(18,2)",
+     "description": "net_merchandise_revenue / n_orders, GBP.",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "mom_growth",
+     "data_type": "DOUBLE",
+     "description": "Month-over-month growth of net_merchandise_revenue (0.10 = +10%).",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "yoy_growth",
+     "data_type": "DOUBLE",
+     "description": "Growth vs the same month a year earlier (NULL in the first 12 months).",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "ytd_net_revenue",
+     "data_type": "DECIMAL(18,2)",
+     "description": "Year-to-date net merchandise revenue, GBP.",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    },
+    {
+     "name": "is_partial_month",
+     "data_type": "BOOLEAN",
+     "description": "True when the data ends before the month does (December 2011 ends on 2011-12-09).",
+     "tests": [],
+     "pii": false,
+     "masking": ""
+    }
+   ],
+   "materialization": "table",
+   "tags": [
+    "analytics"
+   ],
+   "grain": "one row per calendar month, 2009-12 to 2011-12",
+   "depends_on": [
+    "fct_order_lines",
+    "dim_product",
+    "dim_date"
+   ],
+   "model_tests": [
+    "assert_monthly_mart_reconciles_to_fact"
+   ],
+   "notes": [],
+   "row_count": 25
+  }
+ }
+}

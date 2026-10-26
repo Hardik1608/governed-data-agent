@@ -1,0 +1,25 @@
+{
+ "gold_queries": 1534,
+ "validator_rejections": 0,
+ "false_rejection_rate": 0.0,
+ "rejection_codes": {},
+ "rejected": [],
+ "gold_queries_that_fail_to_run": 2,
+ "safe_sql_same_result": 1532,
+ "safe_sql_different": 0,
+ "safe_sql_differences": [],
+ "single_shot_prompt_chars_by_db": {
+  "debit_card_specializing": 811,
+  "financial": 1847,
+  "formula_1": 3594,
+  "california_schools": 2207,
+  "card_games": 2713,
+  "european_football_2": 6701,
+  "thrombosis_prediction": 1232,
+  "toxicology": 738,
+  "student_club": 1832,
+  "superhero": 1662,
+  "codebase_community": 2472
+ },
+ "single_shot_prompt_tokens_estimate_max": 2233
+}

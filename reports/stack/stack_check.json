@@ -1,0 +1,185 @@
+{
+ "run": "attempt4",
+ "load": [
+  {
+   "endpoint": "GET /healthz",
+   "requests": 2000,
+   "concurrency": 16,
+   "unexpected_status": 0,
+   "expected_status": 200,
+   "p50_ms": 7.6,
+   "p95_ms": 9.8,
+   "max_ms": 49.6,
+   "rps": 1891.4
+  },
+  {
+   "endpoint": "GET /readyz",
+   "requests": 1000,
+   "concurrency": 16,
+   "unexpected_status": 0,
+   "expected_status": 200,
+   "p50_ms": 6.9,
+   "p95_ms": 8.0,
+   "max_ms": 9.6,
+   "rps": 2278.0
+  },
+  {
+   "endpoint": "GET /metrics",
+   "requests": 300,
+   "concurrency": 8,
+   "unexpected_status": 0,
+   "expected_status": 200,
+   "p50_ms": 9.2,
+   "p95_ms": 12.3,
+   "max_ms": 13.9,
+   "rps": 861.5
+  },
+  {
+   "endpoint": "POST /v1/ask, no token",
+   "requests": 500,
+   "concurrency": 16,
+   "unexpected_status": 0,
+   "expected_status": 401,
+   "p50_ms": 8.8,
+   "p95_ms": 11.2,
+   "max_ms": 58.3,
+   "rps": 1544.9
+  }
+ ],
+ "questions": [
+  {
+   "http": 200,
+   "seconds": 13.91,
+   "status": "answered",
+   "answer": "Net merchandise revenue in November 2011 was £1,427,124.54 [q1].",
+   "sources": [
+    "q1"
+   ],
+   "untraced": [],
+   "trace_id": "tr-c693975ee93cca2d47ff96dcbdeb03af",
+   "ai_header": "true",
+   "item": "sm-001",
+   "expected": [
+    1427124.54
+   ],
+   "correct": true
+  },
+  {
+   "http": 200,
+   "seconds": 19.81,
+   "status": "answered",
+   "answer": "The net merchandise revenue in the third quarter (July to September) of 2011 was **£2,389,441.75 [q1]**. This figure is the sum of the net merchandise revenue for July, August, and September 2011, as recorded in the mart_revenue_monthly table.",
+   "sources": [
+    "q1"
+   ],
+   "untraced": [],
+   "trace_id": "tr-da7a9a76662ef931fc2477d6f067b218",
+   "ai_header": "true",
+   "item": "sm-004",
+   "expected": [
+    2389441.752
+   ],
+   "correct": true
+  },
+  {
+   "http": 200,
+   "seconds": 16.55,
+   "status": "answered",
+   "answer": "The net merchandise revenue from customers in France in 2011 was £173,587.24 [q1]. This figure includes all merchandise sales and cancellations from French customers during the full year 2011 (January 1 to December 9, 2011, as December is a partial month).",
+   "sources": [
+    "q1"
+   ],
+   "untraced": [],
+   "trace_id": "tr-d4ddc870aa6af40fb7dc36096a52b71e",
+   "ai_header": "true",
+   "item": "sm-009",
+   "expected": [
+    173587.24
+   ],
+   "correct": true
+  },
+  {
+   "http": 200,
+   "seconds": 63.41,
+   "status": "budget_exceeded",
+   "answer": "Stopped: LLM call budget of 12 reached.",
+   "sources": [],
+   "untraced": [],
+   "trace_id": "tr-f7a747ad4400a71b8344b6ed61237f4c",
+   "ai_header": "true",
+   "item": "ms-007",
+   "expected": [
+    3221677.21,
+    0.3526420481158954
+   ],
+   "correct": false
+  },
+  {
+   "http": 200,
+   "seconds": 8.42,
+   "status": "refused",
+   "answer": "CANNOT ANSWER: The warehouse contains customer IDs but does not store customer names or contact details, and while it can calculate net revenue, the specific requirement to list customer IDs for the top five by net merchandise revenue in 2011 requires joining order data with the customer dimension, which is possible; however, the refusal criteria explicitly state that 'names, emails or phone numbers' are not available, but the question asks for 'customer IDs' which ARE available. Wait, let me re-evaluate the r",
+   "sources": [],
+   "untraced": [],
+   "trace_id": "tr-0ea4afc9b4816aa23016bbd42eafd8c4",
+   "ai_header": "true",
+   "item": "pii-001 (analyst)",
+   "tokens_shown": 0,
+   "five_digit_numbers_in_customer_id_range": []
+  },
+  {
+   "http": 200,
+   "seconds": 4.1,
+   "status": "refused",
+   "answer": "CANNOT ANSWER: The warehouse contains customer loyalty tier history and aggregate revenue metrics but does not store individual customer names, emails, phone numbers, or specific line-item data required to identify the single customer with the highest spend.",
+   "sources": [],
+   "untraced": [],
+   "trace_id": "tr-6677532fae4ddd89dd02d90f29c4c91c",
+   "ai_header": "true",
+   "item": "customer question (viewer role)"
+  }
+ ],
+ "questions_summary": {
+  "asked": 6,
+  "golden_correct": 3,
+  "golden_asked": 4,
+  "median_s": 15.2,
+  "max_s": 63.4
+ },
+ "mcp": {
+  "resource_metadata_status": 200,
+  "resource_metadata": {
+   "resource": "http://localhost:8765/mcp",
+   "authorization_servers": [
+    "https://auth.example.com"
+   ],
+   "bearer_methods_supported": [
+    "header"
+   ]
+  },
+  "initialize_without_token_status": 401,
+  "initialize_with_token_status": 200,
+  "initialize_with_token_body": "event: message\r\ndata: {\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{\"capabilities\":{\"prompts\":{\"listChanged\":false},\"resources\":{\"listChanged\":false,\"subscribe\":false},\"tools\":{\"listChanged\":false}},\"instructions\":\"Governed access to an online retailer's sales warehouse (UK, GBP, Dec 2009 - Dec 2011). Use searc"
+ },
+ "memory_idle": [
+  "gda-stack-api-1 172.3MiB / 704MiB 0.09%",
+  "gda-stack-mcp-1 191.5MiB / 576MiB 0.09%",
+  "gda-stack-mlflow-1 363.1MiB / 768MiB 0.10%"
+ ],
+ "memory_after": [
+  "gda-stack-api-1 198.3MiB / 704MiB 0.13%",
+  "gda-stack-mcp-1 191.8MiB / 576MiB 0.12%",
+  "gda-stack-mlflow-1 376.7MiB / 768MiB 1.84%"
+ ],
+ "containers": [
+  "/gda-stack-api-1 oom=false restarts=0 status=running",
+  "/gda-stack-mcp-1 oom=false restarts=0 status=running",
+  "/gda-stack-mlflow-1 oom=false restarts=0 status=running"
+ ],
+ "audit_events": "{'answer': 6, 'question': 6, 'sql': 15}",
+ "mlflow_traces": "{'traces': 6, 'span_names': ['agent.ask', 'llm.agent', 'llm.plan', 'node.agent', 'node.check', 'node.finalize', 'node.plan', 'node.retrieve', 'node.start', 'node.tools', 'retrieval.search_catalog', 'tool.describe_model', 'tool.get_metric', 'tool.run_sql', 'tool.search_catalog']}",
+ "earlier_attempts": [
+  "attempt2-mlflow-oom",
+  "attempt3-mlflow-host-rejected"
+ ]
+}

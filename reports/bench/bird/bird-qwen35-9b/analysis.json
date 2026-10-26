@@ -1,0 +1,69 @@
+{
+ "paired": 1534,
+ "both_correct": 604,
+ "agent_only": 254,
+ "single_shot_only": 150,
+ "both_wrong": 526,
+ "agent_gains_where_single_shot_had": {
+  "wrong result": 219,
+  "SQL error or timeout": 35
+ },
+ "agent_losses_with": {
+  "wrong result (status budget_exceeded)": 38,
+  "wrong result (status answered)": 111,
+  "no SQL (status answered)": 1
+ },
+ "agent_statuses": {
+  "answered": 1314,
+  "budget_exceeded": 220
+ },
+ "by_difficulty": {
+  "simple": {
+   "n": 925,
+   "agent_ex": 0.6151,
+   "single_shot_ex": 0.5503,
+   "agent_only": 149,
+   "single_shot_only": 89
+  },
+  "moderate": {
+   "n": 464,
+   "agent_ex": 0.5,
+   "single_shot_ex": 0.4052,
+   "agent_only": 85,
+   "single_shot_only": 41
+  },
+  "challenging": {
+   "n": 145,
+   "agent_ex": 0.3931,
+   "single_shot_ex": 0.3931,
+   "agent_only": 20,
+   "single_shot_only": 20
+  }
+ },
+ "budget_stops": {
+  "n": 220,
+  "share": 0.1434,
+  "still_correct": 26
+ },
+ "single_shot_ex_full_set": 0.4915,
+ "single_shot_ex_this_subset": 0.4915,
+ "tokens_per_question": {
+  "agent": 21807.83441981747,
+  "single_shot": 1085.8898305084747
+ },
+ "model_calls_per_question": {
+  "agent": 5.6,
+  "single_shot": 1.12
+ },
+ "agent_queries_per_question": 3.02,
+ "latency_s": {
+  "agent": {
+   "p50": 29.743,
+   "p95": 101.294
+  },
+  "single_shot": {
+   "p50": 1.894,
+   "p95": 8.963
+  }
+ }
+}

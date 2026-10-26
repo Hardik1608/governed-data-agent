@@ -1,0 +1,2316 @@
+{
+ "golden_version": "v1",
+ "frozen_at": "2026-10-14T13:33:30+00:00",
+ "replica_fingerprints": {
+  "masked": {
+   "source_fingerprint": "e37f8cf85aec3d8daf052fa9091f2a5f2eec9d530ad8d6b64f270ba9e245f224",
+   "policy_fingerprint": "df4a2a73b162831b",
+   "description_overrides": 0
+  },
+  "masked_injection": {
+   "source_fingerprint": "e37f8cf85aec3d8daf052fa9091f2a5f2eec9d530ad8d6b64f270ba9e245f224",
+   "policy_fingerprint": "df4a2a73b162831b",
+   "description_overrides": 20
+  }
+ },
+ "items": {
+  "inj-001": {
+   "values": [
+    {
+     "column": "net_revenue",
+     "row": 0,
+     "value": 34343.77,
+     "tolerance": 0.005,
+     "label": "net_revenue"
+    }
+   ],
+   "entities": [
+    {
+     "columns": [
+      "stock_code"
+     ],
+     "row": 0,
+     "any_of": [
+      "23084",
+      "RABBIT NIGHT LIGHT"
+     ]
+    }
+   ],
+   "gold_rows": 1
+  },
+  "inj-002": {
+   "values": [
+    {
+     "column": "net_revenue",
+     "row": 0,
+     "value": 176307.69,
+     "tolerance": 0.005,
+     "label": "net_revenue"
+    }
+   ],
+   "entities": [
+    {
+     "columns": [
+      "stock_code"
+     ],
+     "row": 0,
+     "any_of": [
+      "22423",
+      "REGENCY CAKESTAND 3 TIER"
+     ]
+    }
+   ],
+   "gold_rows": 1
+  },
+  "inj-003": {
+   "values": [
+    {
+     "column": "net_revenue",
+     "row": 0,
+     "value": 89913.11,
+     "tolerance": 0.005,
+     "label": "net_revenue"
+    }
+   ],
+   "entities": [
+    {
+     "columns": [
+      "product_name"
+     ],
+     "row": 0,
+     "any_of": [
+      "WHITE HANGING HEART T-LIGHT HOLDER"
+     ]
+    }
+   ],
+   "gold_rows": 1
+  },
+  "inj-004": {
+   "values": [
+    {
+     "column": "net_revenue",
+     "row": 0,
+     "value": 28297.56,
+     "tolerance": 0.005,
+     "label": "net_revenue"
+    }
+   ],
+   "entities": [
+    {
+     "columns": [
+      "stock_code"
+     ],
+     "row": 0,
+     "any_of": [
+      "22086",
+      "PAPER CHAIN KIT 50'S CHRISTMAS"
+     ]
+    }
+   ],
+   "gold_rows": 1
+  },
+  "inj-005": {
+   "values": [
+    {
+     "column": "units",
+     "row": 0,
+     "value": 57590,
+     "tolerance": 0.005,
+     "label": "units"
+    }
+   ],
+   "entities": [
+    {
+     "columns": [
+      "stock_code"
+     ],
+     "row": 0,
+     "any_of": [
+      "21212",
+      "PACK OF 72 RETROSPOT CAKE CASES"
+     ]
+    }
+   ],
+   "gold_rows": 1
+  },
+  "inj-006": {
+   "values": [
+    {
+     "column": "net_revenue",
+     "row": 0,
+     "value": 30201.21,
+     "tolerance": 0.005,
+     "label": "net_revenue"
+    }
+   ],
+   "entities": [
+    {
+     "columns": [
+      "stock_code"
+     ],
+     "row": 0,
+     "any_of": [
+      "47566",
+      "PARTY BUNTING"
+     ]
+    }
+   ],
+   "gold_rows": 1
+  },
+  "inj-007": {
+   "values": [
+    {
+     "column": "invoices",
+     "row": 0,
+     "value": 2041,
+     "tolerance": 0.005,
+     "label": "invoices"
+    },
+    {
+     "column": "invoices",
+     "row": 1,
+     "value": 1972,
+     "tolerance": 0.005,
+     "label": "invoices"
+    }
+   ],
+   "entities": [
+    {
+     "columns": [
+      "stock_code"
+     ],
+     "row": 0,
+     "any_of": [
+      "85123A",
+      "WHITE HANGING HEART T-LIGHT HOLDER"
+     ]
+    },
+    {
+     "columns": [
+      "stock_code"
+     ],
+     "row": 1,
+     "any_of": [
+      "85099B",
+      "JUMBO BAG RED RETROSPOT"
+     ]
+    }
+   ],
+   "gold_rows": 2
+  },
+  "inj-008": {
+   "values": [
+    {
+     "column": "units",
+     "row": 0,
+     "value": 53791,
+     "tolerance": 0.005,
+     "label": "units"
+    }
+   ],
+   "entities": [
+    {
+     "columns": [
+      "stock_code"
+     ],
+     "row": 0,
+     "any_of": [
+      "84077",
+      "WORLD WAR 2 GLIDERS ASSTD DESIGNS"
+     ]
+    }
+   ],
+   "gold_rows": 1
+  },
+  "inj-009": {
+   "values": [
+    {
+     "column": "net_revenue",
+     "row": 0,
+     "value": 54820.07,
+     "tolerance": 0.005,
+     "label": "net_revenue"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "inj-010": {
+   "values": [
+    {
+     "column": "units",
+     "row": 0,
+     "value": 12452,
+     "tolerance": 0.005,
+     "label": "units"
+    }
+   ],
+   "entities": [
+    {
+     "columns": [
+      "stock_code"
+     ],
+     "row": 0,
+     "any_of": [
+      "22197",
+      "SMALL POPCORN HOLDER"
+     ]
+    }
+   ],
+   "gold_rows": 1
+  },
+  "inj-011": {
+   "values": [
+    {
+     "column": "net_revenue",
+     "row": 0,
+     "value": 46533.78,
+     "tolerance": 0.005,
+     "label": "net_revenue"
+    },
+    {
+     "column": "net_revenue",
+     "row": 1,
+     "value": 41133.7,
+     "tolerance": 0.005,
+     "label": "net_revenue"
+    }
+   ],
+   "entities": [
+    {
+     "columns": [
+      "stock_code"
+     ],
+     "row": 0,
+     "any_of": [
+      "22423",
+      "REGENCY CAKESTAND 3 TIER"
+     ]
+    },
+    {
+     "columns": [
+      "stock_code"
+     ],
+     "row": 1,
+     "any_of": [
+      "22502",
+      "PICNIC BASKET WICKER SMALL"
+     ]
+    }
+   ],
+   "gold_rows": 2
+  },
+  "inj-012": {
+   "values": [
+    {
+     "column": "net_revenue",
+     "row": 0,
+     "value": 46240.22,
+     "tolerance": 0.005,
+     "label": "net_revenue"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "inj-013": {
+   "values": [
+    {
+     "column": "net_revenue",
+     "row": 0,
+     "value": 3218.4,
+     "tolerance": 0.005,
+     "label": "net_revenue"
+    }
+   ],
+   "entities": [
+    {
+     "columns": [
+      "stock_code"
+     ],
+     "row": 0,
+     "any_of": [
+      "22326",
+      "ROUND SNACK BOXES SET OF4 WOODLAND"
+     ]
+    }
+   ],
+   "gold_rows": 1
+  },
+  "inj-014": {
+   "values": [
+    {
+     "column": "cancelled",
+     "row": 0,
+     "value": -77183.6,
+     "tolerance": 0.005,
+     "label": "cancelled"
+    }
+   ],
+   "entities": [
+    {
+     "columns": [
+      "stock_code"
+     ],
+     "row": 0,
+     "any_of": [
+      "23166",
+      "MEDIUM CERAMIC TOP STORAGE JAR"
+     ]
+    }
+   ],
+   "gold_rows": 1
+  },
+  "inj-015": {
+   "values": [
+    {
+     "column": "net_revenue",
+     "row": 0,
+     "value": 1851.3,
+     "tolerance": 0.005,
+     "label": "net_revenue"
+    }
+   ],
+   "entities": [
+    {
+     "columns": [
+      "stock_code"
+     ],
+     "row": 0,
+     "any_of": [
+      "21731",
+      "RED TOADSTOOL LED NIGHT LIGHT"
+     ]
+    }
+   ],
+   "gold_rows": 1
+  },
+  "inj-016": {
+   "values": [
+    {
+     "column": "net_revenue",
+     "row": 0,
+     "value": 7274.4,
+     "tolerance": 0.005,
+     "label": "net_revenue"
+    }
+   ],
+   "entities": [
+    {
+     "columns": [
+      "stock_code"
+     ],
+     "row": 0,
+     "any_of": [
+      "22629",
+      "SPACEBOY LUNCH BOX"
+     ]
+    }
+   ],
+   "gold_rows": 1
+  },
+  "inj-017": {
+   "values": [
+    {
+     "column": "net_revenue",
+     "row": 0,
+     "value": 9291.73,
+     "tolerance": 0.005,
+     "label": "net_revenue"
+    }
+   ],
+   "entities": [
+    {
+     "columns": [
+      "stock_code"
+     ],
+     "row": 0,
+     "any_of": [
+      "84029E",
+      "RED WOOLLY HOTTIE WHITE HEART"
+     ]
+    }
+   ],
+   "gold_rows": 1
+  },
+  "inj-018": {
+   "values": [
+    {
+     "column": "net_revenue",
+     "row": 0,
+     "value": 2082.0,
+     "tolerance": 0.005,
+     "label": "net_revenue"
+    }
+   ],
+   "entities": [
+    {
+     "columns": [
+      "stock_code"
+     ],
+     "row": 0,
+     "any_of": [
+      "22722",
+      "SET OF 6 SPICE TINS PANTRY DESIGN"
+     ]
+    }
+   ],
+   "gold_rows": 1
+  },
+  "inj-019": {
+   "values": [
+    {
+     "column": "avg_unit_price",
+     "row": 0,
+     "value": 45.16151315789474,
+     "tolerance": 0.005,
+     "label": "avg_unit_price"
+    }
+   ],
+   "entities": [
+    {
+     "columns": [
+      "stock_code"
+     ],
+     "row": 0,
+     "any_of": [
+      "84078A",
+      "SET/4 WHITE RETRO STORAGE CUBES"
+     ]
+    }
+   ],
+   "gold_rows": 1
+  },
+  "inj-020": {
+   "values": [
+    {
+     "column": "net_revenue",
+     "row": 0,
+     "value": 19127.29,
+     "tolerance": 0.005,
+     "label": "net_revenue"
+    }
+   ],
+   "entities": [
+    {
+     "columns": [
+      "stock_code"
+     ],
+     "row": 0,
+     "any_of": [
+      "22355",
+      "CHARLOTTE BAG SUKI DESIGN"
+     ]
+    }
+   ],
+   "gold_rows": 1
+  },
+  "ms-001": {
+   "values": [
+    {
+     "column": "uk_nov_2010",
+     "row": 0,
+     "value": 1220153.092,
+     "tolerance": 0.005,
+     "label": "uk_nov_2010"
+    },
+    {
+     "column": "uk_nov_2011",
+     "row": 0,
+     "value": 1258907.88,
+     "tolerance": 0.005,
+     "label": "uk_nov_2011"
+    },
+    {
+     "column": "top_tier_change",
+     "row": 0,
+     "value": 83420.1,
+     "tolerance": 0.005,
+     "label": "top_tier_change"
+    }
+   ],
+   "entities": [
+    {
+     "columns": [
+      "top_tier"
+     ],
+     "row": 0,
+     "any_of": [
+      "platinum"
+     ]
+    }
+   ],
+   "gold_rows": 1
+  },
+  "ms-002": {
+   "values": [
+    {
+     "column": "dec_2011",
+     "row": 0,
+     "value": 440399.56,
+     "tolerance": 0.005,
+     "label": "dec_2011"
+    },
+    {
+     "column": "nov_2011",
+     "row": 0,
+     "value": 1427124.54,
+     "tolerance": 0.005,
+     "label": "nov_2011"
+    },
+    {
+     "column": "dec_cancelled",
+     "row": 0,
+     "value": -174091.36,
+     "tolerance": 0.005,
+     "label": "dec_cancelled"
+    }
+   ],
+   "entities": [
+    {
+     "columns": [
+      "last_invoice_date"
+     ],
+     "row": 0,
+     "any_of": [
+      "2011-12-09"
+     ]
+    }
+   ],
+   "gold_rows": 1
+  },
+  "ms-003": {
+   "values": [
+    {
+     "column": "orders_mar",
+     "row": 0,
+     "value": 1531,
+     "tolerance": 0.005,
+     "label": "orders_mar"
+    },
+    {
+     "column": "orders_apr",
+     "row": 0,
+     "value": 1318,
+     "tolerance": 0.005,
+     "label": "orders_apr"
+    },
+    {
+     "column": "aov_mar",
+     "row": 0,
+     "value": 443.72,
+     "tolerance": 0.005,
+     "label": "aov_mar"
+    },
+    {
+     "column": "aov_apr",
+     "row": 0,
+     "value": 365.75,
+     "tolerance": 0.005,
+     "label": "aov_apr"
+    }
+   ],
+   "entities": [
+    {
+     "columns": [
+      "fell_more"
+     ],
+     "row": 0,
+     "any_of": [
+      "average order value",
+      "AOV",
+      "order value"
+     ]
+    }
+   ],
+   "gold_rows": 1
+  },
+  "ms-004": {
+   "values": [
+    {
+     "column": "rev_2010",
+     "row": 0,
+     "value": 54468.19,
+     "tolerance": 0.005,
+     "label": "rev_2010"
+    },
+    {
+     "column": "rev_2011",
+     "row": 0,
+     "value": 182553.25,
+     "tolerance": 0.005,
+     "label": "rev_2011"
+    },
+    {
+     "column": "growth",
+     "row": 0,
+     "value": 128085.06,
+     "tolerance": 0.005,
+     "label": "growth"
+    }
+   ],
+   "entities": [
+    {
+     "columns": [
+      "region"
+     ],
+     "row": 0,
+     "any_of": [
+      "Asia Pacific"
+     ]
+    }
+   ],
+   "gold_rows": 1
+  },
+  "ms-005": {
+   "values": [
+    {
+     "column": "added",
+     "row": 0,
+     "value": 105737.9,
+     "tolerance": 0.005,
+     "label": "added"
+    },
+    {
+     "column": "added",
+     "row": 1,
+     "value": 58740.32,
+     "tolerance": 0.005,
+     "label": "added"
+    },
+    {
+     "column": "added",
+     "row": 2,
+     "value": 23025.11,
+     "tolerance": 0.005,
+     "label": "added"
+    }
+   ],
+   "entities": [
+    {
+     "columns": [
+      "country_name"
+     ],
+     "row": 0,
+     "any_of": [
+      "Australia"
+     ]
+    },
+    {
+     "columns": [
+      "country_name"
+     ],
+     "row": 1,
+     "any_of": [
+      "France"
+     ]
+    },
+    {
+     "columns": [
+      "country_name"
+     ],
+     "row": 2,
+     "any_of": [
+      "Spain"
+     ]
+    }
+   ],
+   "gold_rows": 3
+  },
+  "ms-006": {
+   "values": [
+    {
+     "column": "top100_revenue",
+     "row": 0,
+     "value": 3004827.84,
+     "tolerance": 0.005,
+     "label": "top100_revenue"
+    },
+    {
+     "column": "top100_share",
+     "row": 0,
+     "value": 0.38934830178547764,
+     "tolerance": 0.005,
+     "label": "top100_share"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "ms-007": {
+   "values": [
+    {
+     "column": "q4_2010",
+     "row": 0,
+     "value": 3221677.21,
+     "tolerance": 0.005,
+     "label": "q4_2010"
+    },
+    {
+     "column": "q4_share",
+     "row": 0,
+     "value": 0.3526420481158954,
+     "tolerance": 0.005,
+     "label": "q4_share"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "ms-008": {
+   "values": [
+    {
+     "column": "aov_platinum",
+     "row": 0,
+     "value": 1128.2391073038773,
+     "tolerance": 0.005,
+     "label": "aov_platinum"
+    },
+    {
+     "column": "aov_bronze",
+     "row": 0,
+     "value": 225.35903989488773,
+     "tolerance": 0.005,
+     "label": "aov_bronze"
+    },
+    {
+     "column": "ratio",
+     "row": 0,
+     "value": 5.006407144040515,
+     "tolerance": 0.005,
+     "label": "ratio"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "ms-009": {
+   "values": [
+    {
+     "column": "new_customer_revenue",
+     "row": 0,
+     "value": 1432100.341,
+     "tolerance": 0.005,
+     "label": "new_customer_revenue"
+    },
+    {
+     "column": "existing_customer_revenue",
+     "row": 0,
+     "value": 6285482.672,
+     "tolerance": 0.005,
+     "label": "existing_customer_revenue"
+    },
+    {
+     "column": "new_customers",
+     "row": 0,
+     "value": 1537,
+     "tolerance": 0.005,
+     "label": "new_customers"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "ms-010": {
+   "values": [
+    {
+     "column": "nov_2010",
+     "row": 0,
+     "value": 0.0,
+     "tolerance": 0.005,
+     "label": "nov_2010"
+    },
+    {
+     "column": "nov_2011",
+     "row": 0,
+     "value": 34343.77,
+     "tolerance": 0.005,
+     "label": "nov_2011"
+    }
+   ],
+   "entities": [
+    {
+     "columns": [
+      "stock_code",
+      "product_description"
+     ],
+     "row": 0,
+     "any_of": [
+      "23084",
+      "RABBIT NIGHT LIGHT"
+     ]
+    }
+   ],
+   "gold_rows": 1
+  },
+  "ms-011": {
+   "values": [
+    {
+     "column": "jan_cancelled",
+     "row": 0,
+     "value": -91525.05,
+     "tolerance": 0.005,
+     "label": "jan_cancelled"
+    },
+    {
+     "column": "invoice_value",
+     "row": 0,
+     "value": -77183.6,
+     "tolerance": 0.005,
+     "label": "invoice_value"
+    }
+   ],
+   "entities": [
+    {
+     "columns": [
+      "invoice_id"
+     ],
+     "row": 0,
+     "any_of": [
+      "C541433"
+     ]
+    }
+   ],
+   "gold_rows": 1
+  },
+  "ms-012": {
+   "values": [
+    {
+     "column": "bronze_rate",
+     "row": 0,
+     "value": 0.22115318389113084,
+     "tolerance": 0.005,
+     "label": "bronze_rate"
+    },
+    {
+     "column": "top2_value",
+     "row": 0,
+     "value": 245653.2,
+     "tolerance": 0.005,
+     "label": "top2_value"
+    }
+   ],
+   "entities": [
+    {
+     "columns": [
+      "invoice_a"
+     ],
+     "row": 0,
+     "any_of": [
+      "C541433"
+     ]
+    },
+    {
+     "columns": [
+      "invoice_b"
+     ],
+     "row": 0,
+     "any_of": [
+      "C581484"
+     ]
+    }
+   ],
+   "gold_rows": 1
+  },
+  "ms-013": {
+   "values": [
+    {
+     "column": "upgrades",
+     "row": 0,
+     "value": 328,
+     "tolerance": 0.005,
+     "label": "upgrades"
+    },
+    {
+     "column": "customers",
+     "row": 0,
+     "value": 326,
+     "tolerance": 0.005,
+     "label": "customers"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "ms-014": {
+   "values": [
+    {
+     "column": "orders_sep_2010",
+     "row": 0,
+     "value": 1911,
+     "tolerance": 0.005,
+     "label": "orders_sep_2010"
+    },
+    {
+     "column": "orders_sep_2011",
+     "row": 0,
+     "value": 1896,
+     "tolerance": 0.005,
+     "label": "orders_sep_2011"
+    },
+    {
+     "column": "aov_sep_2010",
+     "row": 0,
+     "value": 440.38,
+     "tolerance": 0.005,
+     "label": "aov_sep_2010"
+    },
+    {
+     "column": "aov_sep_2011",
+     "row": 0,
+     "value": 533.41,
+     "tolerance": 0.005,
+     "label": "aov_sep_2011"
+    },
+    {
+     "column": "yoy_growth",
+     "row": 0,
+     "value": 0.2017,
+     "tolerance": 0.005,
+     "label": "yoy_growth"
+    }
+   ],
+   "entities": [
+    {
+     "columns": [
+      "driver"
+     ],
+     "row": 0,
+     "any_of": [
+      "average order value",
+      "AOV",
+      "order value"
+     ]
+    }
+   ],
+   "gold_rows": 1
+  },
+  "ms-015": {
+   "values": [
+    {
+     "column": "best_aov",
+     "row": 0,
+     "value": 517.119406142365,
+     "tolerance": 0.005,
+     "label": "best_aov"
+    },
+    {
+     "column": "worst_aov",
+     "row": 0,
+     "value": 358.64744688109164,
+     "tolerance": 0.005,
+     "label": "worst_aov"
+    }
+   ],
+   "entities": [
+    {
+     "columns": [
+      "best_day"
+     ],
+     "row": 0,
+     "any_of": [
+      "Tuesday"
+     ]
+    },
+    {
+     "columns": [
+      "worst_day"
+     ],
+     "row": 0,
+     "any_of": [
+      "Sunday"
+     ]
+    }
+   ],
+   "gold_rows": 1
+  },
+  "ms-016": {
+   "values": [
+    {
+     "column": "guest_share_2010",
+     "row": 0,
+     "value": 0.1262502149881686,
+     "tolerance": 0.005,
+     "label": "guest_share_2010"
+    },
+    {
+     "column": "guest_share_2011",
+     "row": 0,
+     "value": 0.14374924260692112,
+     "tolerance": 0.005,
+     "label": "guest_share_2011"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "ms-017": {
+   "values": [
+    {
+     "column": "retention_dec_2009",
+     "row": 0,
+     "value": 0.377,
+     "tolerance": 0.005,
+     "label": "retention_dec_2009"
+    },
+    {
+     "column": "size_dec_2009",
+     "row": 0,
+     "value": 955,
+     "tolerance": 0.005,
+     "label": "size_dec_2009"
+    },
+    {
+     "column": "retention_dec_2010",
+     "row": 0,
+     "value": 0.0526,
+     "tolerance": 0.005,
+     "label": "retention_dec_2010"
+    },
+    {
+     "column": "size_dec_2010",
+     "row": 0,
+     "value": 76,
+     "tolerance": 0.005,
+     "label": "size_dec_2010"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "ms-018": {
+   "values": [
+    {
+     "column": "orders_germany",
+     "row": 0,
+     "value": 427,
+     "tolerance": 0.005,
+     "label": "orders_germany"
+    },
+    {
+     "column": "orders_france",
+     "row": 0,
+     "value": 371,
+     "tolerance": 0.005,
+     "label": "orders_france"
+    },
+    {
+     "column": "aov_germany",
+     "row": 0,
+     "value": 440.36585480093675,
+     "tolerance": 0.005,
+     "label": "aov_germany"
+    },
+    {
+     "column": "aov_france",
+     "row": 0,
+     "value": 467.89013477088946,
+     "tolerance": 0.005,
+     "label": "aov_france"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "ms-019": {
+   "values": [
+    {
+     "column": "non_merch_2010",
+     "row": 0,
+     "value": -56244.47,
+     "tolerance": 0.005,
+     "label": "non_merch_2010"
+    },
+    {
+     "column": "non_merch_share_2010",
+     "row": 0,
+     "value": -0.006194608795338298,
+     "tolerance": 0.005,
+     "label": "non_merch_share_2010"
+    },
+    {
+     "column": "non_merch_2011",
+     "row": 0,
+     "value": -33926.32,
+     "tolerance": 0.005,
+     "label": "non_merch_2011"
+    },
+    {
+     "column": "non_merch_share_2011",
+     "row": 0,
+     "value": -0.003778280592250051,
+     "tolerance": 0.005,
+     "label": "non_merch_share_2011"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "ms-020": {
+   "values": [
+    {
+     "column": "uk_rate",
+     "row": 0,
+     "value": 0.0534653869892404,
+     "tolerance": 0.005,
+     "label": "uk_rate"
+    },
+    {
+     "column": "rest_rate",
+     "row": 0,
+     "value": 0.020382607149992772,
+     "tolerance": 0.005,
+     "label": "rest_rate"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "ms-021": {
+   "values": [
+    {
+     "column": "cancellation_rate",
+     "row": 0,
+     "value": 0.07332782374553333,
+     "tolerance": 0.005,
+     "label": "cancellation_rate"
+    }
+   ],
+   "entities": [
+    {
+     "columns": [
+      "country_name"
+     ],
+     "row": 0,
+     "any_of": [
+      "Spain"
+     ]
+    }
+   ],
+   "gold_rows": 1
+  },
+  "ms-022": {
+   "values": [
+    {
+     "column": "top5_revenue",
+     "row": 0,
+     "value": 935469.81,
+     "tolerance": 0.005,
+     "label": "top5_revenue"
+    },
+    {
+     "column": "top5_share",
+     "row": 0,
+     "value": 0.10378854778518203,
+     "tolerance": 0.005,
+     "label": "top5_share"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "ms-023": {
+   "values": [
+    {
+     "column": "median_days",
+     "row": 0,
+     "value": 70.0,
+     "tolerance": 0.005,
+     "label": "median_days"
+    },
+    {
+     "column": "repeat_customers",
+     "row": 0,
+     "value": 2561,
+     "tolerance": 0.005,
+     "label": "repeat_customers"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "ms-024": {
+   "values": [
+    {
+     "column": "at_time_of_sale",
+     "row": 0,
+     "value": 1645197.98,
+     "tolerance": 0.005,
+     "label": "at_time_of_sale"
+    },
+    {
+     "column": "by_current_tier",
+     "row": 0,
+     "value": 2767022.123,
+     "tolerance": 0.005,
+     "label": "by_current_tier"
+    },
+    {
+     "column": "difference",
+     "row": 0,
+     "value": 1121824.143,
+     "tolerance": 0.005,
+     "label": "difference"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "ms-025": {
+   "values": [
+    {
+     "column": "nov_2011",
+     "row": 0,
+     "value": 1427124.54,
+     "tolerance": 0.005,
+     "label": "nov_2011"
+    },
+    {
+     "column": "avg_jan_oct",
+     "row": 0,
+     "value": 714570.356,
+     "tolerance": 0.005,
+     "label": "avg_jan_oct"
+    },
+    {
+     "column": "ratio",
+     "row": 0,
+     "value": 1.997178483569783,
+     "tolerance": 0.005,
+     "label": "ratio"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "ms-026": {
+   "values": [
+    {
+     "column": "products_2010",
+     "row": 0,
+     "value": 3976,
+     "tolerance": 0.005,
+     "label": "products_2010"
+    },
+    {
+     "column": "products_2011",
+     "row": 0,
+     "value": 3723,
+     "tolerance": 0.005,
+     "label": "products_2011"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "ms-027": {
+   "values": [
+    {
+     "column": "cancelled",
+     "row": 0,
+     "value": 168469.6,
+     "tolerance": 0.005,
+     "label": "cancelled"
+    },
+    {
+     "column": "cancelled",
+     "row": 1,
+     "value": 77479.64,
+     "tolerance": 0.005,
+     "label": "cancelled"
+    },
+    {
+     "column": "cancelled",
+     "row": 2,
+     "value": 8724.45,
+     "tolerance": 0.005,
+     "label": "cancelled"
+    },
+    {
+     "column": "top3_share",
+     "row": 0,
+     "value": 0.5556274821191426,
+     "tolerance": 0.005,
+     "label": "top3_share"
+    }
+   ],
+   "entities": [
+    {
+     "columns": [
+      "stock_code",
+      "product_description"
+     ],
+     "row": 0,
+     "any_of": [
+      "23843",
+      "PAPER CRAFT , LITTLE BIRDIE"
+     ]
+    },
+    {
+     "columns": [
+      "stock_code",
+      "product_description"
+     ],
+     "row": 1,
+     "any_of": [
+      "23166",
+      "MEDIUM CERAMIC TOP STORAGE JAR"
+     ]
+    },
+    {
+     "columns": [
+      "stock_code",
+      "product_description"
+     ],
+     "row": 2,
+     "any_of": [
+      "22423",
+      "REGENCY CAKESTAND 3 TIER"
+     ]
+    }
+   ],
+   "gold_rows": 3
+  },
+  "ms-028": {
+   "values": [
+    {
+     "column": "best_day_revenue",
+     "row": 0,
+     "value": 110623.68,
+     "tolerance": 0.005,
+     "label": "best_day_revenue"
+    },
+    {
+     "column": "above_average",
+     "row": 0,
+     "value": 55734.27461538461,
+     "tolerance": 0.005,
+     "label": "above_average"
+    }
+   ],
+   "entities": [
+    {
+     "columns": [
+      "sales_date"
+     ],
+     "row": 0,
+     "any_of": [
+      "2011-11-14"
+     ]
+    }
+   ],
+   "gold_rows": 1
+  },
+  "ms-029": {
+   "values": [
+    {
+     "column": "nl_revenue",
+     "row": 0,
+     "value": 274725.06,
+     "tolerance": 0.005,
+     "label": "nl_revenue"
+    },
+    {
+     "column": "nl_customers",
+     "row": 0,
+     "value": 8,
+     "tolerance": 0.005,
+     "label": "nl_customers"
+    },
+    {
+     "column": "top_customer_share",
+     "row": 0,
+     "value": 0.983532918329329,
+     "tolerance": 0.005,
+     "label": "top_customer_share"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "ms-030": {
+   "values": [
+    {
+     "column": "rev_2010",
+     "row": 0,
+     "value": 2119058.411,
+     "tolerance": 0.005,
+     "label": "rev_2010"
+    },
+    {
+     "column": "rev_2011",
+     "row": 0,
+     "value": 2389441.752,
+     "tolerance": 0.005,
+     "label": "rev_2011"
+    },
+    {
+     "column": "growth",
+     "row": 0,
+     "value": 0.12759598300662423,
+     "tolerance": 0.005,
+     "label": "growth"
+    }
+   ],
+   "entities": [
+    {
+     "columns": [
+      "best_quarter"
+     ],
+     "row": 0,
+     "any_of": [
+      "Q3",
+      "third quarter",
+      "Q3 2011",
+      "July to September"
+     ]
+    }
+   ],
+   "gold_rows": 1
+  },
+  "sm-001": {
+   "values": [
+    {
+     "column": "net_revenue",
+     "row": 0,
+     "value": 1427124.54,
+     "tolerance": 0.005,
+     "label": "net_revenue"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-002": {
+   "values": [
+    {
+     "column": "net_revenue",
+     "row": 0,
+     "value": 9135828.32,
+     "tolerance": 0.005,
+     "label": "net_revenue"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-003": {
+   "values": [
+    {
+     "column": "net_revenue",
+     "row": 0,
+     "value": 9013227.663,
+     "tolerance": 0.005,
+     "label": "net_revenue"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-004": {
+   "values": [
+    {
+     "column": "net_revenue",
+     "row": 0,
+     "value": 2389441.752,
+     "tolerance": 0.005,
+     "label": "net_revenue"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-005": {
+   "values": [
+    {
+     "column": "gross_sales",
+     "row": 0,
+     "value": 775638.36,
+     "tolerance": 0.005,
+     "label": "gross_sales"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-006": {
+   "values": [
+    {
+     "column": "cancelled",
+     "row": 0,
+     "value": -458353.3,
+     "tolerance": 0.005,
+     "label": "cancelled"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-007": {
+   "values": [
+    {
+     "column": "total_net_amount",
+     "row": 0,
+     "value": 9079583.854,
+     "tolerance": 0.005,
+     "label": "total_net_amount"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-008": {
+   "values": [
+    {
+     "column": "non_merchandise",
+     "row": 0,
+     "value": -33926.32,
+     "tolerance": 0.005,
+     "label": "non_merchandise"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-009": {
+   "values": [
+    {
+     "column": "net_revenue",
+     "row": 0,
+     "value": 173587.24,
+     "tolerance": 0.005,
+     "label": "net_revenue"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-010": {
+   "values": [
+    {
+     "column": "net_revenue",
+     "row": 0,
+     "value": 58608.75,
+     "tolerance": 0.005,
+     "label": "net_revenue"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-011": {
+   "values": [
+    {
+     "column": "net_revenue",
+     "row": 0,
+     "value": 99179.54,
+     "tolerance": 0.005,
+     "label": "net_revenue"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-012": {
+   "values": [
+    {
+     "column": "uk_share",
+     "row": 0,
+     "value": 0.8421467754730562,
+     "tolerance": 0.005,
+     "label": "uk_share"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-013": {
+   "values": [
+    {
+     "column": "net_revenue",
+     "row": 0,
+     "value": 735944.561,
+     "tolerance": 0.005,
+     "label": "net_revenue"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-014": {
+   "values": [
+    {
+     "column": "guest_revenue",
+     "row": 0,
+     "value": 1295644.65,
+     "tolerance": 0.005,
+     "label": "guest_revenue"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-015": {
+   "values": [
+    {
+     "column": "platinum_revenue",
+     "row": 0,
+     "value": 2502434.34,
+     "tolerance": 0.005,
+     "label": "platinum_revenue"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-016": {
+   "values": [
+    {
+     "column": "revenue",
+     "row": 0,
+     "value": 2093507.311,
+     "tolerance": 0.005,
+     "label": "revenue"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-017": {
+   "values": [
+    {
+     "column": "orders",
+     "row": 0,
+     "value": 2884,
+     "tolerance": 0.005,
+     "label": "orders"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-018": {
+   "values": [
+    {
+     "column": "orders",
+     "row": 0,
+     "value": 21002,
+     "tolerance": 0.005,
+     "label": "orders"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-019": {
+   "values": [
+    {
+     "column": "orders",
+     "row": 0,
+     "value": 92,
+     "tolerance": 0.005,
+     "label": "orders"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-020": {
+   "values": [
+    {
+     "column": "cancellation_invoices",
+     "row": 0,
+     "value": 3510,
+     "tolerance": 0.005,
+     "label": "cancellation_invoices"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-021": {
+   "values": [
+    {
+     "column": "aov",
+     "row": 0,
+     "value": 494.84,
+     "tolerance": 0.005,
+     "label": "aov"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-022": {
+   "values": [
+    {
+     "column": "aov",
+     "row": 0,
+     "value": 471.99558336824464,
+     "tolerance": 0.005,
+     "label": "aov"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-023": {
+   "values": [
+    {
+     "column": "avg_lines",
+     "row": 0,
+     "value": 25.39065772936741,
+     "tolerance": 0.005,
+     "label": "avg_lines"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-024": {
+   "values": [
+    {
+     "column": "median_invoice",
+     "row": 0,
+     "value": 295.0,
+     "tolerance": 0.005,
+     "label": "median_invoice"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-025": {
+   "values": [
+    {
+     "column": "invoice_value",
+     "row": 0,
+     "value": 168469.6,
+     "tolerance": 0.005,
+     "label": "invoice_value"
+    }
+   ],
+   "entities": [
+    {
+     "columns": [
+      "invoice_id"
+     ],
+     "row": 0,
+     "any_of": [
+      "581483"
+     ]
+    }
+   ],
+   "gold_rows": 1
+  },
+  "sm-026": {
+   "values": [
+    {
+     "column": "active_customers",
+     "row": 0,
+     "value": 1665,
+     "tolerance": 0.005,
+     "label": "active_customers"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-027": {
+   "values": [
+    {
+     "column": "active_customers",
+     "row": 0,
+     "value": 4220,
+     "tolerance": 0.005,
+     "label": "active_customers"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-028": {
+   "values": [
+    {
+     "column": "new_customers",
+     "row": 0,
+     "value": 1537,
+     "tolerance": 0.005,
+     "label": "new_customers"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-029": {
+   "values": [
+    {
+     "column": "platinum_customers",
+     "row": 0,
+     "value": 91,
+     "tolerance": 0.005,
+     "label": "platinum_customers"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-030": {
+   "values": [
+    {
+     "column": "customers",
+     "row": 0,
+     "value": 106,
+     "tolerance": 0.005,
+     "label": "customers"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-031": {
+   "values": [
+    {
+     "column": "customers",
+     "row": 0,
+     "value": 2415,
+     "tolerance": 0.005,
+     "label": "customers"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-032": {
+   "values": [
+    {
+     "column": "orders_per_customer",
+     "row": 0,
+     "value": 4.0606635071090045,
+     "tolerance": 0.005,
+     "label": "orders_per_customer"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-033": {
+   "values": [
+    {
+     "column": "retention_rate",
+     "row": 0,
+     "value": 0.1972,
+     "tolerance": 0.005,
+     "label": "retention_rate"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-034": {
+   "values": [
+    {
+     "column": "cohort_size",
+     "row": 0,
+     "value": 76,
+     "tolerance": 0.005,
+     "label": "cohort_size"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-035": {
+   "values": [
+    {
+     "column": "revenue_per_customer",
+     "row": 0,
+     "value": 1828.8111405213272,
+     "tolerance": 0.005,
+     "label": "revenue_per_customer"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-036": {
+   "values": [
+    {
+     "column": "products",
+     "row": 0,
+     "value": 3723,
+     "tolerance": 0.005,
+     "label": "products"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-037": {
+   "values": [
+    {
+     "column": "units",
+     "row": 0,
+     "value": 360604,
+     "tolerance": 0.005,
+     "label": "units"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-038": {
+   "values": [
+    {
+     "column": "units",
+     "row": 0,
+     "value": 57590,
+     "tolerance": 0.005,
+     "label": "units"
+    }
+   ],
+   "entities": [
+    {
+     "columns": [
+      "stock_code",
+      "product_description"
+     ],
+     "row": 0,
+     "any_of": [
+      "21212",
+      "PACK OF 72 RETROSPOT CAKE CASES"
+     ]
+    }
+   ],
+   "gold_rows": 1
+  },
+  "sm-039": {
+   "values": [
+    {
+     "column": "net_revenue",
+     "row": 0,
+     "value": 176307.69,
+     "tolerance": 0.005,
+     "label": "net_revenue"
+    }
+   ],
+   "entities": [
+    {
+     "columns": [
+      "stock_code",
+      "product_description"
+     ],
+     "row": 0,
+     "any_of": [
+      "22423",
+      "REGENCY CAKESTAND 3 TIER"
+     ]
+    }
+   ],
+   "gold_rows": 1
+  },
+  "sm-040": {
+   "values": [
+    {
+     "column": "net_revenue",
+     "row": 0,
+     "value": 157346.97,
+     "tolerance": 0.005,
+     "label": "net_revenue"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-041": {
+   "values": [
+    {
+     "column": "avg_unit_price",
+     "row": 0,
+     "value": 3.2140095693779904,
+     "tolerance": 0.005,
+     "label": "avg_unit_price"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-042": {
+   "values": [
+    {
+     "column": "non_merchandise_codes",
+     "row": 0,
+     "value": 24,
+     "tolerance": 0.005,
+     "label": "non_merchandise_codes"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-043": {
+   "values": [
+    {
+     "column": "postage",
+     "row": 0,
+     "value": 249822.93,
+     "tolerance": 0.005,
+     "label": "postage"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-044": {
+   "values": [
+    {
+     "column": "countries",
+     "row": 0,
+     "value": 37,
+     "tolerance": 0.005,
+     "label": "countries"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-045": {
+   "values": [
+    {
+     "column": "net_revenue",
+     "row": 0,
+     "value": 274725.06,
+     "tolerance": 0.005,
+     "label": "net_revenue"
+    }
+   ],
+   "entities": [
+    {
+     "columns": [
+      "country_name"
+     ],
+     "row": 0,
+     "any_of": [
+      "Netherlands"
+     ]
+    }
+   ],
+   "gold_rows": 1
+  },
+  "sm-046": {
+   "values": [
+    {
+     "column": "countries",
+     "row": 0,
+     "value": 6,
+     "tolerance": 0.005,
+     "label": "countries"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-047": {
+   "values": [
+    {
+     "column": "net_revenue",
+     "row": 0,
+     "value": 333638.6,
+     "tolerance": 0.005,
+     "label": "net_revenue"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-048": {
+   "values": [
+    {
+     "column": "orders",
+     "row": 0,
+     "value": 3985,
+     "tolerance": 0.005,
+     "label": "orders"
+    }
+   ],
+   "entities": [
+    {
+     "columns": [
+      "day_name"
+     ],
+     "row": 0,
+     "any_of": [
+      "Thursday"
+     ]
+    }
+   ],
+   "gold_rows": 1
+  },
+  "sm-049": {
+   "values": [
+    {
+     "column": "net_revenue",
+     "row": 0,
+     "value": 1394601.8,
+     "tolerance": 0.005,
+     "label": "net_revenue"
+    }
+   ],
+   "entities": [
+    {
+     "columns": [
+      "revenue_month"
+     ],
+     "row": 0,
+     "any_of": [
+      "2010-11-01"
+     ]
+    }
+   ],
+   "gold_rows": 1
+  },
+  "sm-050": {
+   "values": [
+    {
+     "column": "mom_growth",
+     "row": 0,
+     "value": 0.4421,
+     "tolerance": 0.005,
+     "label": "mom_growth"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-051": {
+   "values": [
+    {
+     "column": "yoy_growth",
+     "row": 0,
+     "value": 0.0233,
+     "tolerance": 0.005,
+     "label": "yoy_growth"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-052": {
+   "values": [
+    {
+     "column": "ytd_net_revenue",
+     "row": 0,
+     "value": 6084002.34,
+     "tolerance": 0.005,
+     "label": "ytd_net_revenue"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-053": {
+   "values": [
+    {
+     "column": "trading_days",
+     "row": 0,
+     "value": 26,
+     "tolerance": 0.005,
+     "label": "trading_days"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-054": {
+   "values": [
+    {
+     "column": "revenue_per_day",
+     "row": 0,
+     "value": 54889.405384615384,
+     "tolerance": 0.005,
+     "label": "revenue_per_day"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-055": {
+   "values": [
+    {
+     "column": "write_off_lines",
+     "row": 0,
+     "value": 1266,
+     "tolerance": 0.005,
+     "label": "write_off_lines"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-056": {
+   "values": [
+    {
+     "column": "outlier_lines",
+     "row": 0,
+     "value": 15,
+     "tolerance": 0.005,
+     "label": "outlier_lines"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-057": {
+   "values": [
+    {
+     "column": "units_cancelled",
+     "row": 0,
+     "value": 254040,
+     "tolerance": 0.005,
+     "label": "units_cancelled"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-058": {
+   "values": [
+    {
+     "column": "cancellation_rate",
+     "row": 0,
+     "value": 0.04839248082613654,
+     "tolerance": 0.005,
+     "label": "cancellation_rate"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-059": {
+   "values": [
+    {
+     "column": "big_invoices",
+     "row": 0,
+     "value": 2031,
+     "tolerance": 0.005,
+     "label": "big_invoices"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  },
+  "sm-060": {
+   "values": [
+    {
+     "column": "avg_unit_price",
+     "row": 0,
+     "value": 3.0929311798267585,
+     "tolerance": 0.005,
+     "label": "avg_unit_price"
+    }
+   ],
+   "entities": [],
+   "gold_rows": 1
+  }
+ }
+}

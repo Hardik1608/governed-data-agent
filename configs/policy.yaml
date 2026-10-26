@@ -1,0 +1,66 @@
+# Governance policy: which models each role can query and how customer identifiers are
+# protected. Enforced in two places that do not trust each other:
+#   1. the SQL validator (table allowlist per role, read-only AST, no table functions);
+#   2. the database itself: every role queries its own read-only replica, built from the
+#      warehouse by `data-agent build-replicas`, that physically contains only what the role
+#      may see. A replica with tokenised identifiers holds no raw identifier at all, so no
+#      SQL (and no validator bug) can return one.
+version: 1
+
+# Reporting models exposed to the agent (dbt gold schema). The ML feature/label marts are
+# deliberately not exposed: they are point-in-time training tables that are easy to misuse
+# in reporting (one row per customer per monthly cutoff).
+models:
+  - fct_order_lines
+  - fct_orders
+  - dim_customer
+  - dim_product
+  - dim_country
+  - dim_date
+  - mart_revenue_monthly
+  - mart_cohort_retention
+
+pii:
+  # Direct identifiers. Tokenised as <prefix><first 12 hex of sha256(secret:kind:value)>:
+  # stable (joins and COUNT DISTINCT still work), not reversible without the secret.
+  columns:
+    - { model: dim_customer, column: customer_id, kind: customer_id, prefix: "cust_" }
+    - { model: fct_order_lines, column: customer_id, kind: customer_id, prefix: "cust_" }
+    - { model: fct_orders, column: customer_id, kind: customer_id, prefix: "cust_" }
+  # Surrogate keys that are *derived* from identifiers with unsalted md5 and are therefore
+  # re-identifiable by brute force (customer_sk = md5(customer_id || '|' || valid_from);
+  # order_line_id = md5 of the line content including customer_id). Verified on the data;
+  # see docs/DESIGN.md "Threat model". They are re-keyed with the same keyed hash.
+  rekey:
+    - { model: dim_customer, column: customer_sk, kind: customer_sk, prefix: "sk_", keep: ["-1"] }
+    - { model: fct_order_lines, column: customer_sk, kind: customer_sk, prefix: "sk_", keep: ["-1"] }
+    - { model: fct_orders, column: customer_sk, kind: customer_sk, prefix: "sk_", keep: ["-1"] }
+    - { model: fct_order_lines, column: order_line_id, kind: order_line_id, prefix: "ol_", length: 16 }
+
+replicas:
+  masked:
+    description: All reporting models; identifiers tokenised, derived keys re-keyed.
+    models: all
+    pii: tokenize
+  clear:
+    description: All reporting models with clear identifiers. Opened only after a recorded human approval.
+    models: all
+    pii: clear
+  aggregates:
+    description: Aggregate marts and non-customer dimensions only.
+    models: [mart_revenue_monthly, mart_cohort_retention, dim_date, dim_country, dim_product]
+    pii: drop
+
+roles:
+  viewer:
+    description: Dashboards and executives. Aggregates only; no customer-level tables.
+    replica: aggregates
+  analyst:
+    description: Analysts. All reporting models; customers appear only as stable tokens.
+    replica: masked
+  finance:
+    description: >
+      Finance. Same as analyst, but may ask to see clear customer identifiers (for example to
+      chase a bad debt). Every such query interrupts for human approval and is audited.
+    replica: masked
+    clear_replica: clear

@@ -1,0 +1,3 @@
+api Up 2 minutes (healthy)
+mcp Up 2 minutes (healthy)
+mlflow Up 2 minutes

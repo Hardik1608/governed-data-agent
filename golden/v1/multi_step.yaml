@@ -1,0 +1,739 @@
+# Golden set v1 - multi-step diagnostic questions (30).
+#
+# Each question needs several queries (or one non-trivial query), a comparison and a
+# judgement. The graded facts are the numbers and entities the question explicitly asks for;
+# gold_sql computes them all in one result, alt_sql independently (see single_metric.yaml for
+# the conventions). The narrative ("why") is graded separately by the LLM judge.
+category: multi_step
+items:
+  - id: ms-001
+    question: How did net merchandise revenue from the United Kingdom change between November 2010 and November 2011, and which loyalty tier (tier at the time of sale) contributed the largest increase? Give both monthly totals and that tier's change in pounds.
+    tags: [scd2, tier, country, yoy]
+    gold_sql: |
+      WITH t AS (
+        SELECT c.loyalty_tier,
+               SUM(CASE WHEN year(f.invoice_ts) = 2010 THEN f.line_revenue ELSE 0 END) AS nov_2010,
+               SUM(CASE WHEN year(f.invoice_ts) = 2011 THEN f.line_revenue ELSE 0 END) AS nov_2011
+        FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+        JOIN dim_country co ON f.country_key = co.country_key
+        JOIN dim_customer c ON f.customer_sk = c.customer_sk
+        WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation')
+          AND co.country_name = 'United Kingdom' AND month(f.invoice_ts) = 11
+          AND year(f.invoice_ts) IN (2010, 2011)
+        GROUP BY 1)
+      SELECT (SELECT SUM(nov_2010) FROM t) AS uk_nov_2010, (SELECT SUM(nov_2011) FROM t) AS uk_nov_2011,
+             loyalty_tier AS top_tier, nov_2011 - nov_2010 AS top_tier_change
+      FROM t ORDER BY top_tier_change DESC LIMIT 1
+    alt_sql: |
+      WITH lines AS (
+        SELECT f.line_revenue, d.calendar_year AS yr, c.loyalty_tier
+        FROM fct_order_lines f JOIN dim_date d ON f.date_key = d.date_key
+        JOIN dim_customer c ON f.customer_id IS NOT DISTINCT FROM CASE WHEN c.customer_sk = '-1' THEN NULL ELSE c.customer_id END
+          AND f.invoice_ts >= c.valid_from AND f.invoice_ts < c.valid_to
+        WHERE d.month_of_year = 11 AND d.calendar_year IN (2010, 2011) AND f.line_type IN ('sale', 'cancellation')
+          AND f.country_key = (SELECT country_key FROM dim_country WHERE iso_alpha2 = 'GB')
+          AND f.product_key IN (SELECT product_key FROM dim_product WHERE is_merchandise)),
+      chg_by_tier AS (
+        SELECT loyalty_tier, SUM(line_revenue) FILTER (WHERE yr = 2011) - SUM(line_revenue) FILTER (WHERE yr = 2010) AS chg
+        FROM lines GROUP BY 1)
+      SELECT (SELECT SUM(line_revenue) FROM lines WHERE yr = 2010) AS uk_nov_2010,
+             (SELECT SUM(line_revenue) FROM lines WHERE yr = 2011) AS uk_nov_2011,
+             arg_max(loyalty_tier, chg) AS top_tier, max(chg) AS top_tier_change FROM chg_by_tier
+    answer:
+      values: [uk_nov_2010, uk_nov_2011, top_tier_change]
+      entities: [top_tier]
+
+  - id: ms-002
+    question: Net merchandise revenue in December 2011 is far below November 2011. Give both monthly figures, the value of merchandise cancelled in December 2011, and the date of the last invoice in the data, and explain the drop.
+    tags: [partial-period, cancellations, diagnosis]
+    gold_sql: |
+      SELECT (SELECT net_merchandise_revenue FROM mart_revenue_monthly WHERE revenue_month = DATE '2011-12-01') AS dec_2011,
+             (SELECT net_merchandise_revenue FROM mart_revenue_monthly WHERE revenue_month = DATE '2011-11-01') AS nov_2011,
+             (SELECT cancelled_merchandise FROM mart_revenue_monthly WHERE revenue_month = DATE '2011-12-01') AS dec_cancelled,
+             (SELECT CAST(MAX(invoice_ts) AS DATE) FROM fct_order_lines) AS last_invoice_date
+    alt_sql: |
+      SELECT SUM(f.line_revenue) FILTER (WHERE f.invoice_ts >= TIMESTAMP '2011-12-01' AND f.line_type IN ('sale', 'cancellation')) AS dec_2011,
+             SUM(f.line_revenue) FILTER (WHERE f.invoice_ts < TIMESTAMP '2011-12-01' AND f.line_type IN ('sale', 'cancellation')) AS nov_2011,
+             SUM(f.line_revenue) FILTER (WHERE f.invoice_ts >= TIMESTAMP '2011-12-01' AND f.line_type = 'cancellation') AS dec_cancelled,
+             (SELECT CAST(MAX(date_day) AS DATE) FROM dim_date d WHERE EXISTS (SELECT 1 FROM fct_orders o WHERE o.date_key = d.date_key)) AS last_invoice_date
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      WHERE p.is_merchandise AND f.invoice_ts >= TIMESTAMP '2011-11-01'
+    answer:
+      values: [dec_2011, nov_2011, dec_cancelled]
+      entities: [last_invoice_date]
+
+  - id: ms-003
+    question: Net merchandise revenue fell from March to April 2011. Break the change down into the number of orders and the average order value for both months. Which of the two fell more in percentage terms?
+    tags: [decomposition, aov, orders]
+    gold_sql: |
+      SELECT MAX(n_orders) FILTER (WHERE revenue_month = DATE '2011-03-01') AS orders_mar,
+             MAX(n_orders) FILTER (WHERE revenue_month = DATE '2011-04-01') AS orders_apr,
+             MAX(avg_order_value) FILTER (WHERE revenue_month = DATE '2011-03-01') AS aov_mar,
+             MAX(avg_order_value) FILTER (WHERE revenue_month = DATE '2011-04-01') AS aov_apr,
+             'average order value' AS fell_more
+      FROM mart_revenue_monthly
+    alt_sql: |
+      WITH m AS (
+        SELECT month(f.invoice_ts) AS mth,
+               COUNT(DISTINCT CASE WHEN f.line_type = 'sale' THEN f.invoice_id END) AS orders,
+               SUM(CASE WHEN p.is_merchandise AND f.line_type IN ('sale', 'cancellation') THEN f.line_revenue ELSE 0 END) AS rev
+        FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+        WHERE f.invoice_ts >= TIMESTAMP '2011-03-01' AND f.invoice_ts < TIMESTAMP '2011-05-01'
+        GROUP BY 1)
+      SELECT a.orders AS orders_mar, b.orders AS orders_apr, a.rev / a.orders AS aov_mar, b.rev / b.orders AS aov_apr,
+             CASE WHEN (b.rev / b.orders) / (a.rev / a.orders) < b.orders / a.orders THEN 'average order value' ELSE 'orders' END AS fell_more
+      FROM m a, m b WHERE a.mth = 3 AND b.mth = 4
+    answer:
+      values: [orders_mar, orders_apr, aov_mar, aov_apr]
+      entities: [{column: fell_more, aliases: [AOV, order value]}]
+
+  - id: ms-004
+    question: Which sales region grew its net merchandise revenue the most in absolute terms from 2010 to 2011 (note that 2011 ends on 9 December), and what were its two annual totals?
+    tags: [region, yoy]
+    gold_sql: |
+      SELECT c.region,
+             SUM(f.line_revenue) FILTER (WHERE year(f.invoice_ts) = 2010) AS rev_2010,
+             SUM(f.line_revenue) FILTER (WHERE year(f.invoice_ts) = 2011) AS rev_2011,
+             SUM(f.line_revenue) FILTER (WHERE year(f.invoice_ts) = 2011) - SUM(f.line_revenue) FILTER (WHERE year(f.invoice_ts) = 2010) AS growth
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      JOIN dim_country c ON f.country_key = c.country_key
+      WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation') AND year(f.invoice_ts) IN (2010, 2011)
+      GROUP BY 1 ORDER BY growth DESC NULLS LAST LIMIT 1
+    alt_sql: |
+      WITH r AS (
+        SELECT c.region, year(o.invoice_ts) AS yr, SUM(o.merchandise_revenue) AS rev
+        FROM fct_orders o JOIN dim_country c ON o.country_key = c.country_key
+        WHERE o.invoice_type IN ('sale', 'cancellation') AND year(o.invoice_ts) IN (2010, 2011)
+        GROUP BY 1, 2)
+      SELECT a.region, a.rev AS rev_2010, b.rev AS rev_2011, b.rev - a.rev AS growth
+      FROM r a JOIN r b ON a.region = b.region AND a.yr = 2010 AND b.yr = 2011
+      QUALIFY ROW_NUMBER() OVER (ORDER BY b.rev - a.rev DESC) = 1
+    answer:
+      values: [rev_2010, rev_2011, growth]
+      entities: [region]
+
+  - id: ms-005
+    question: Excluding the United Kingdom, which three countries added the most net merchandise revenue in 2011 compared with 2010, and how much did each add?
+    tags: [country, yoy, top-n]
+    gold_sql: |
+      SELECT c.country_name,
+             SUM(CASE WHEN year(f.invoice_ts) = 2011 THEN f.line_revenue ELSE 0 END)
+             - SUM(CASE WHEN year(f.invoice_ts) = 2010 THEN f.line_revenue ELSE 0 END) AS added
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      JOIN dim_country c ON f.country_key = c.country_key
+      WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation') AND year(f.invoice_ts) IN (2010, 2011)
+        AND c.country_name <> 'United Kingdom'
+      GROUP BY 1 ORDER BY added DESC LIMIT 3
+    alt_sql: |
+      SELECT c.country_name, SUM(CASE WHEN d.calendar_year = 2011 THEN o.merchandise_revenue ELSE -o.merchandise_revenue END) AS added
+      FROM fct_orders o JOIN dim_country c ON o.country_key = c.country_key JOIN dim_date d ON o.date_key = d.date_key
+      WHERE o.invoice_type IN ('sale', 'cancellation') AND d.calendar_year IN (2010, 2011) AND NOT c.is_domestic_market
+      GROUP BY 1 ORDER BY added DESC LIMIT 3
+    answer:
+      values: [{column: added, row: 0}, {column: added, row: 1}, {column: added, row: 2}]
+      entities: [{column: country_name, row: 0}, {column: country_name, row: 1}, {column: country_name, row: 2}]
+      order_matters: true
+
+  - id: ms-006
+    question: How concentrated is revenue among identified customers? What share of 2011 net merchandise revenue from identified customers came from the 100 customers with the highest net revenue, and how much was that in pounds?
+    tags: [concentration, customers]
+    gold_sql: |
+      WITH c AS (
+        SELECT f.customer_id, SUM(f.line_revenue) AS rev
+        FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+        WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation')
+          AND f.customer_id IS NOT NULL AND year(f.invoice_ts) = 2011
+        GROUP BY 1),
+      top AS (SELECT rev FROM c ORDER BY rev DESC LIMIT 100)
+      SELECT (SELECT SUM(rev) FROM top) AS top100_revenue,
+             (SELECT SUM(rev) FROM top) / (SELECT SUM(rev) FROM c) AS top100_share
+    alt_sql: |
+      WITH c AS (
+        SELECT customer_id, SUM(merchandise_revenue) AS rev FROM fct_orders
+        WHERE invoice_type IN ('sale', 'cancellation') AND customer_id IS NOT NULL
+          AND invoice_ts >= TIMESTAMP '2011-01-01' AND invoice_ts < TIMESTAMP '2012-01-01'
+        GROUP BY 1),
+      ranked AS (SELECT rev, ROW_NUMBER() OVER (ORDER BY rev DESC) AS rn FROM c)
+      SELECT SUM(rev) FILTER (WHERE rn <= 100) AS top100_revenue,
+             SUM(rev) FILTER (WHERE rn <= 100) / SUM(rev) AS top100_share FROM ranked
+    answer:
+      values: [top100_revenue, top100_share]
+
+  - id: ms-007
+    question: How seasonal is the business? What share of 2010 net merchandise revenue was made in the fourth quarter, and what was the Q4 2010 total?
+    tags: [seasonality, quarterly]
+    gold_sql: |
+      SELECT SUM(net_merchandise_revenue) FILTER (WHERE month(revenue_month) >= 10) AS q4_2010,
+             SUM(net_merchandise_revenue) FILTER (WHERE month(revenue_month) >= 10) / SUM(net_merchandise_revenue) AS q4_share
+      FROM mart_revenue_monthly WHERE year(revenue_month) = 2010
+    alt_sql: |
+      SELECT SUM(CASE WHEN d.calendar_quarter = 4 THEN f.line_revenue ELSE 0 END) AS q4_2010,
+             SUM(CASE WHEN d.calendar_quarter = 4 THEN f.line_revenue ELSE 0 END) / SUM(f.line_revenue) AS q4_share
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      JOIN dim_date d ON f.date_key = d.date_key
+      WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation') AND d.calendar_year = 2010
+    answer:
+      values: [q4_2010, q4_share]
+
+  - id: ms-008
+    question: In 2011, how did the average order value of customers in the platinum tier compare with customers in the bronze tier (tier at the time of sale)? Give both AOVs and the ratio between them.
+    tags: [aov, tier, scd2]
+    gold_sql: |
+      WITH t AS (
+        SELECT c.loyalty_tier,
+               SUM(CASE WHEN p.is_merchandise AND f.line_type IN ('sale', 'cancellation') THEN f.line_revenue ELSE 0 END)
+               / COUNT(DISTINCT CASE WHEN f.line_type = 'sale' THEN f.invoice_id END) AS aov
+        FROM fct_order_lines f JOIN dim_customer c ON f.customer_sk = c.customer_sk
+        JOIN dim_product p ON f.product_key = p.product_key
+        WHERE year(f.invoice_ts) = 2011 AND c.loyalty_tier IN ('platinum', 'bronze')
+        GROUP BY 1)
+      SELECT MAX(aov) FILTER (WHERE loyalty_tier = 'platinum') AS aov_platinum,
+             MAX(aov) FILTER (WHERE loyalty_tier = 'bronze') AS aov_bronze,
+             MAX(aov) FILTER (WHERE loyalty_tier = 'platinum') / MAX(aov) FILTER (WHERE loyalty_tier = 'bronze') AS ratio
+      FROM t
+    alt_sql: |
+      WITH o AS (
+        SELECT c.loyalty_tier, o.invoice_id, o.invoice_type, o.merchandise_revenue
+        FROM fct_orders o JOIN dim_customer c ON o.customer_sk = c.customer_sk
+        WHERE o.invoice_ts >= TIMESTAMP '2011-01-01' AND o.invoice_ts < TIMESTAMP '2012-01-01'),
+      t AS (
+        SELECT loyalty_tier,
+               SUM(merchandise_revenue) FILTER (WHERE invoice_type IN ('sale', 'cancellation'))
+               / COUNT(*) FILTER (WHERE invoice_type = 'sale') AS aov
+        FROM o GROUP BY 1)
+      SELECT p.aov AS aov_platinum, b.aov AS aov_bronze, p.aov / b.aov AS ratio
+      FROM t p, t b WHERE p.loyalty_tier = 'platinum' AND b.loyalty_tier = 'bronze'
+    answer:
+      values: [aov_platinum, aov_bronze, ratio]
+
+  - id: ms-009
+    question: In 2011, how much net merchandise revenue came from customers who made their first ever purchase in 2011, how much from customers acquired earlier, and how many new customers bought in 2011?
+    tags: [cohorts, new-vs-existing]
+    gold_sql: |
+      WITH firsts AS (
+        SELECT customer_id, MIN(invoice_ts) AS first_ts FROM fct_order_lines
+        WHERE line_type = 'sale' AND customer_id IS NOT NULL GROUP BY 1),
+      rev AS (
+        SELECT f.customer_id, year(firsts.first_ts) = 2011 AS is_new, SUM(f.line_revenue) AS r
+        FROM fct_order_lines f JOIN firsts ON f.customer_id = firsts.customer_id
+        JOIN dim_product p ON f.product_key = p.product_key
+        WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation') AND year(f.invoice_ts) = 2011
+        GROUP BY 1, 2)
+      SELECT SUM(r) FILTER (WHERE is_new) AS new_customer_revenue,
+             SUM(r) FILTER (WHERE NOT is_new) AS existing_customer_revenue,
+             (SELECT SUM(cohort_size) FROM mart_cohort_retention WHERE months_since_first_purchase = 0 AND year(cohort_month) = 2011) AS new_customers
+      FROM rev
+    alt_sql: |
+      WITH cohort AS (
+        SELECT customer_id, MIN(invoice_ts) AS first_ts FROM fct_orders
+        WHERE invoice_type = 'sale' AND customer_id IS NOT NULL GROUP BY 1)
+      SELECT SUM(o.merchandise_revenue) FILTER (WHERE c.first_ts >= TIMESTAMP '2011-01-01') AS new_customer_revenue,
+             SUM(o.merchandise_revenue) FILTER (WHERE c.first_ts < TIMESTAMP '2011-01-01') AS existing_customer_revenue,
+             (SELECT COUNT(*) FROM cohort WHERE first_ts >= TIMESTAMP '2011-01-01') AS new_customers
+      FROM fct_orders o JOIN cohort c ON o.customer_id = c.customer_id
+      WHERE o.invoice_type IN ('sale', 'cancellation') AND o.invoice_ts >= TIMESTAMP '2011-01-01'
+    answer:
+      values: [new_customer_revenue, existing_customer_revenue, new_customers]
+
+  - id: ms-010
+    question: Which product's net merchandise revenue grew the most from November 2010 to November 2011, and what did it make in each of the two months?
+    tags: [products, yoy]
+    gold_sql: |
+      SELECT p.stock_code, p.product_description,
+             SUM(CASE WHEN year(f.invoice_ts) = 2010 THEN f.line_revenue ELSE 0 END) AS nov_2010,
+             SUM(CASE WHEN year(f.invoice_ts) = 2011 THEN f.line_revenue ELSE 0 END) AS nov_2011
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation') AND month(f.invoice_ts) = 11
+        AND year(f.invoice_ts) IN (2010, 2011)
+      GROUP BY 1, 2 ORDER BY nov_2011 - nov_2010 DESC LIMIT 1
+    alt_sql: |
+      WITH n10 AS (SELECT product_key, SUM(line_revenue) AS r FROM fct_order_lines
+                   WHERE line_type IN ('sale', 'cancellation') AND invoice_ts >= TIMESTAMP '2010-11-01' AND invoice_ts < TIMESTAMP '2010-12-01' GROUP BY 1),
+           n11 AS (SELECT product_key, SUM(line_revenue) AS r FROM fct_order_lines
+                   WHERE line_type IN ('sale', 'cancellation') AND invoice_ts >= TIMESTAMP '2011-11-01' AND invoice_ts < TIMESTAMP '2011-12-01' GROUP BY 1)
+      SELECT p.stock_code, p.product_description, COALESCE(n10.r, 0) AS nov_2010, COALESCE(n11.r, 0) AS nov_2011
+      FROM dim_product p LEFT JOIN n10 ON p.product_key = n10.product_key LEFT JOIN n11 ON p.product_key = n11.product_key
+      WHERE p.is_merchandise ORDER BY COALESCE(n11.r, 0) - COALESCE(n10.r, 0) DESC LIMIT 1
+    answer:
+      values: [nov_2010, nov_2011]
+      entities: [{any_of: [stock_code, product_description]}]
+
+  - id: ms-011
+    question: Cancelled merchandise in January 2011 was unusually high. How much was cancelled that month, which single cancellation invoice accounts for most of it, and what was that invoice's value?
+    tags: [cancellations, outlier, diagnosis]
+    gold_sql: |
+      SELECT (SELECT cancelled_merchandise FROM mart_revenue_monthly WHERE revenue_month = DATE '2011-01-01') AS jan_cancelled,
+             invoice_id, merchandise_revenue AS invoice_value
+      FROM fct_orders WHERE invoice_type = 'cancellation'
+        AND invoice_ts >= TIMESTAMP '2011-01-01' AND invoice_ts < TIMESTAMP '2011-02-01'
+      ORDER BY merchandise_revenue LIMIT 1
+    alt_sql: |
+      WITH c AS (
+        SELECT f.invoice_id, SUM(f.line_revenue) AS v
+        FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+        JOIN dim_date d ON f.date_key = d.date_key
+        WHERE p.is_merchandise AND f.line_type = 'cancellation' AND d.year_month = '2011-01'
+        GROUP BY 1)
+      SELECT (SELECT SUM(v) FROM c) AS jan_cancelled, arg_min(invoice_id, v) AS invoice_id, MIN(v) AS invoice_value FROM c
+    answer:
+      values: [jan_cancelled, invoice_value]
+      entities: [invoice_id]
+
+  - id: ms-012
+    question: The bronze tier's 2011 cancellation rate by value (cancelled merchandise divided by gross merchandise sales, tier at the time of sale) is much higher than the other tiers. What is it, and which two cancellation invoices explain most of it? Give their combined value.
+    tags: [cancellations, tier, diagnosis]
+    gold_sql: |
+      WITH b AS (
+        SELECT f.invoice_id, f.line_type, f.line_revenue
+        FROM fct_order_lines f JOIN dim_customer c ON f.customer_sk = c.customer_sk
+        JOIN dim_product p ON f.product_key = p.product_key
+        WHERE p.is_merchandise AND c.loyalty_tier = 'bronze' AND year(f.invoice_ts) = 2011),
+      top2 AS (SELECT invoice_id, SUM(line_revenue) AS v FROM b WHERE line_type = 'cancellation'
+               GROUP BY 1 ORDER BY v LIMIT 2)
+      SELECT -SUM(line_revenue) FILTER (WHERE line_type = 'cancellation') / SUM(line_revenue) FILTER (WHERE line_type = 'sale') AS bronze_rate,
+             (SELECT -SUM(v) FROM top2) AS top2_value,
+             (SELECT MIN(invoice_id) FROM top2) AS invoice_a,
+             (SELECT MAX(invoice_id) FROM top2) AS invoice_b
+      FROM b
+    alt_sql: |
+      WITH o AS (
+        SELECT o.invoice_id, o.invoice_type, o.merchandise_revenue AS v
+        FROM fct_orders o JOIN dim_customer c ON o.customer_sk = c.customer_sk
+        WHERE c.loyalty_tier = 'bronze' AND o.invoice_ts >= TIMESTAMP '2011-01-01' AND o.invoice_ts < TIMESTAMP '2012-01-01'),
+      ranked AS (SELECT invoice_id, v, ROW_NUMBER() OVER (ORDER BY v) AS rn FROM o WHERE invoice_type = 'cancellation')
+      SELECT -SUM(v) FILTER (WHERE invoice_type = 'cancellation') / SUM(v) FILTER (WHERE invoice_type = 'sale') AS bronze_rate,
+             (SELECT -SUM(v) FROM ranked WHERE rn <= 2) AS top2_value,
+             (SELECT MIN(invoice_id) FROM ranked WHERE rn <= 2) AS invoice_a,
+             (SELECT MAX(invoice_id) FROM ranked WHERE rn <= 2) AS invoice_b
+      FROM o
+    answer:
+      values: [bronze_rate, top2_value]
+      entities: [invoice_a, invoice_b]
+
+  - id: ms-013
+    question: How many times did a customer move up from the silver tier to the gold tier during 2011, and how many distinct customers did that?
+    tags: [scd2, tier-migration]
+    gold_sql: |
+      WITH v AS (
+        SELECT customer_id, loyalty_tier, valid_from,
+               LAG(loyalty_tier) OVER (PARTITION BY customer_id ORDER BY version_number) AS prev_tier
+        FROM dim_customer)
+      SELECT COUNT(*) AS upgrades, COUNT(DISTINCT customer_id) AS customers
+      FROM v WHERE loyalty_tier = 'gold' AND prev_tier = 'silver' AND year(valid_from) = 2011
+    alt_sql: |
+      SELECT COUNT(*) AS upgrades, COUNT(DISTINCT cur.customer_id) AS customers
+      FROM dim_customer cur JOIN dim_customer prev
+        ON cur.customer_id = prev.customer_id AND prev.version_number = cur.version_number - 1
+      WHERE cur.loyalty_tier = 'gold' AND prev.loyalty_tier = 'silver'
+        AND cur.valid_from >= TIMESTAMP '2011-01-01' AND cur.valid_from < TIMESTAMP '2012-01-01'
+    answer:
+      values: [upgrades, customers]
+
+  - id: ms-014
+    question: September 2011 net merchandise revenue grew strongly year over year. Was that driven by more orders or by a higher average order value? Give orders and AOV for September 2010 and September 2011, and the growth rate.
+    tags: [decomposition, yoy, aov]
+    gold_sql: |
+      SELECT MAX(n_orders) FILTER (WHERE year(revenue_month) = 2010) AS orders_sep_2010,
+             MAX(n_orders) FILTER (WHERE year(revenue_month) = 2011) AS orders_sep_2011,
+             MAX(avg_order_value) FILTER (WHERE year(revenue_month) = 2010) AS aov_sep_2010,
+             MAX(avg_order_value) FILTER (WHERE year(revenue_month) = 2011) AS aov_sep_2011,
+             MAX(yoy_growth) FILTER (WHERE year(revenue_month) = 2011) AS yoy_growth,
+             'average order value' AS driver
+      FROM mart_revenue_monthly WHERE month(revenue_month) = 9
+    alt_sql: |
+      WITH m AS (
+        SELECT year(f.invoice_ts) AS yr,
+               COUNT(DISTINCT f.invoice_id) FILTER (WHERE f.line_type = 'sale') AS orders,
+               SUM(f.line_revenue) FILTER (WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation')) AS rev
+        FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+        WHERE month(f.invoice_ts) = 9 GROUP BY 1)
+      SELECT a.orders AS orders_sep_2010, b.orders AS orders_sep_2011, a.rev / a.orders AS aov_sep_2010,
+             b.rev / b.orders AS aov_sep_2011, ROUND(b.rev / a.rev - 1, 4) AS yoy_growth,
+             CASE WHEN b.orders < a.orders THEN 'average order value' ELSE 'orders' END AS driver
+      FROM m a, m b WHERE a.yr = 2010 AND b.yr = 2011
+    answer:
+      values: [orders_sep_2010, orders_sep_2011, aov_sep_2010, aov_sep_2011, yoy_growth]
+      entities: [{column: driver, aliases: [AOV, order value]}]
+
+  - id: ms-015
+    question: Which day of the week had the highest average order value in 2011 and which had the lowest? Give both AOVs.
+    tags: [weekday, aov]
+    gold_sql: |
+      WITH w AS (
+        SELECT d.day_name,
+               SUM(CASE WHEN p.is_merchandise AND f.line_type IN ('sale', 'cancellation') THEN f.line_revenue ELSE 0 END)
+               / COUNT(DISTINCT CASE WHEN f.line_type = 'sale' THEN f.invoice_id END) AS aov
+        FROM fct_order_lines f JOIN dim_date d ON f.date_key = d.date_key
+        JOIN dim_product p ON f.product_key = p.product_key
+        WHERE d.calendar_year = 2011 GROUP BY 1)
+      SELECT arg_max(day_name, aov) AS best_day, MAX(aov) AS best_aov, arg_min(day_name, aov) AS worst_day, MIN(aov) AS worst_aov FROM w
+    alt_sql: |
+      WITH w AS (
+        SELECT dayname(invoice_ts) AS day_name,
+               SUM(merchandise_revenue) FILTER (WHERE invoice_type IN ('sale', 'cancellation'))
+               / COUNT(*) FILTER (WHERE invoice_type = 'sale') AS aov
+        FROM fct_orders WHERE year(invoice_ts) = 2011 GROUP BY 1),
+      r AS (SELECT *, RANK() OVER (ORDER BY aov DESC) AS hi, RANK() OVER (ORDER BY aov) AS lo FROM w)
+      SELECT MAX(day_name) FILTER (WHERE hi = 1) AS best_day, MAX(aov) FILTER (WHERE hi = 1) AS best_aov,
+             MAX(day_name) FILTER (WHERE lo = 1) AS worst_day, MAX(aov) FILTER (WHERE lo = 1) AS worst_aov FROM r
+    answer:
+      values: [best_aov, worst_aov]
+      entities: [best_day, worst_day]
+
+  - id: ms-016
+    question: Is the share of net merchandise revenue from guest checkouts (orders without a customer account) growing? Give the guest share for 2010 and for 2011.
+    tags: [guests, share, trend]
+    gold_sql: |
+      SELECT SUM(f.line_revenue) FILTER (WHERE f.customer_id IS NULL AND year(f.invoice_ts) = 2010)
+             / SUM(f.line_revenue) FILTER (WHERE year(f.invoice_ts) = 2010) AS guest_share_2010,
+             SUM(f.line_revenue) FILTER (WHERE f.customer_id IS NULL AND year(f.invoice_ts) = 2011)
+             / SUM(f.line_revenue) FILTER (WHERE year(f.invoice_ts) = 2011) AS guest_share_2011
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation')
+    alt_sql: |
+      WITH g AS (
+        SELECT year(invoice_ts) AS yr, SUM(merchandise_revenue) FILTER (WHERE customer_sk = '-1') AS guest
+        FROM fct_orders WHERE invoice_type IN ('sale', 'cancellation') GROUP BY 1),
+      t AS (SELECT year(revenue_month) AS yr, SUM(net_merchandise_revenue) AS total FROM mart_revenue_monthly GROUP BY 1)
+      SELECT MAX(g.guest / t.total) FILTER (WHERE g.yr = 2010) AS guest_share_2010,
+             MAX(g.guest / t.total) FILTER (WHERE g.yr = 2011) AS guest_share_2011
+      FROM g JOIN t ON g.yr = t.yr
+    answer:
+      values: [guest_share_2010, guest_share_2011]
+
+  - id: ms-017
+    question: Compare six-month retention of the December 2009 and December 2010 acquisition cohorts. Give both retention rates and cohort sizes, and say whether the comparison is fair.
+    tags: [retention, cohorts, caveat]
+    gold_sql: |
+      SELECT MAX(retention_rate) FILTER (WHERE cohort_month = DATE '2009-12-01') AS retention_dec_2009,
+             MAX(cohort_size) FILTER (WHERE cohort_month = DATE '2009-12-01') AS size_dec_2009,
+             MAX(retention_rate) FILTER (WHERE cohort_month = DATE '2010-12-01') AS retention_dec_2010,
+             MAX(cohort_size) FILTER (WHERE cohort_month = DATE '2010-12-01') AS size_dec_2010
+      FROM mart_cohort_retention WHERE months_since_first_purchase = 6
+    alt_sql: |
+      WITH firsts AS (
+        SELECT customer_id, date_trunc('month', MIN(invoice_ts)) AS cohort FROM fct_order_lines
+        WHERE line_type = 'sale' AND customer_id IS NOT NULL GROUP BY 1),
+      act AS (SELECT DISTINCT customer_id, date_trunc('month', invoice_ts) AS m FROM fct_order_lines
+              WHERE line_type = 'sale' AND customer_id IS NOT NULL),
+      r AS (
+        SELECT f.cohort, COUNT(*) AS size, COUNT(a.customer_id) AS back
+        FROM firsts f LEFT JOIN act a ON a.customer_id = f.customer_id AND a.m = f.cohort + INTERVAL 6 MONTH
+        GROUP BY 1)
+      SELECT ROUND(MAX(back / size) FILTER (WHERE cohort = TIMESTAMP '2009-12-01'), 4) AS retention_dec_2009,
+             MAX(size) FILTER (WHERE cohort = TIMESTAMP '2009-12-01') AS size_dec_2009,
+             ROUND(MAX(back / size) FILTER (WHERE cohort = TIMESTAMP '2010-12-01'), 4) AS retention_dec_2010,
+             MAX(size) FILTER (WHERE cohort = TIMESTAMP '2010-12-01') AS size_dec_2010
+      FROM r
+    answer:
+      values: [retention_dec_2009, size_dec_2009, retention_dec_2010, size_dec_2010]
+
+  - id: ms-018
+    question: Germany or France - which had more orders in 2011, and which had the higher average order value? Give the orders and AOV of both countries.
+    tags: [country, aov, comparison]
+    gold_sql: |
+      WITH c AS (
+        SELECT co.country_name,
+               COUNT(DISTINCT CASE WHEN f.line_type = 'sale' THEN f.invoice_id END) AS orders,
+               SUM(CASE WHEN p.is_merchandise AND f.line_type IN ('sale', 'cancellation') THEN f.line_revenue ELSE 0 END) AS rev
+        FROM fct_order_lines f JOIN dim_country co ON f.country_key = co.country_key
+        JOIN dim_product p ON f.product_key = p.product_key
+        WHERE year(f.invoice_ts) = 2011 AND co.country_name IN ('Germany', 'France') GROUP BY 1)
+      SELECT MAX(orders) FILTER (WHERE country_name = 'Germany') AS orders_germany,
+             MAX(orders) FILTER (WHERE country_name = 'France') AS orders_france,
+             MAX(rev / orders) FILTER (WHERE country_name = 'Germany') AS aov_germany,
+             MAX(rev / orders) FILTER (WHERE country_name = 'France') AS aov_france
+      FROM c
+    alt_sql: |
+      WITH o AS (
+        SELECT c.iso_alpha2, o.invoice_type, o.merchandise_revenue FROM fct_orders o
+        JOIN dim_country c ON o.country_key = c.country_key
+        WHERE c.iso_alpha2 IN ('DE', 'FR') AND o.invoice_ts >= TIMESTAMP '2011-01-01' AND o.invoice_ts < TIMESTAMP '2012-01-01')
+      SELECT COUNT(*) FILTER (WHERE iso_alpha2 = 'DE' AND invoice_type = 'sale') AS orders_germany,
+             COUNT(*) FILTER (WHERE iso_alpha2 = 'FR' AND invoice_type = 'sale') AS orders_france,
+             SUM(merchandise_revenue) FILTER (WHERE iso_alpha2 = 'DE' AND invoice_type IN ('sale', 'cancellation'))
+               / COUNT(*) FILTER (WHERE iso_alpha2 = 'DE' AND invoice_type = 'sale') AS aov_germany,
+             SUM(merchandise_revenue) FILTER (WHERE iso_alpha2 = 'FR' AND invoice_type IN ('sale', 'cancellation'))
+               / COUNT(*) FILTER (WHERE iso_alpha2 = 'FR' AND invoice_type = 'sale') AS aov_france
+      FROM o
+    answer:
+      values: [orders_germany, orders_france, aov_germany, aov_france]
+
+  - id: ms-019
+    question: Did non-merchandise lines (postage, fees, adjustments) become a bigger or smaller part of the business? Give the non-merchandise amount and its share of the total net amount for 2010 and for 2011.
+    tags: [non-merchandise, share, trend]
+    gold_sql: |
+      SELECT SUM(non_merchandise_amount) FILTER (WHERE year(revenue_month) = 2010) AS non_merch_2010,
+             SUM(non_merchandise_amount) FILTER (WHERE year(revenue_month) = 2010) / SUM(total_net_amount) FILTER (WHERE year(revenue_month) = 2010) AS non_merch_share_2010,
+             SUM(non_merchandise_amount) FILTER (WHERE year(revenue_month) = 2011) AS non_merch_2011,
+             SUM(non_merchandise_amount) FILTER (WHERE year(revenue_month) = 2011) / SUM(total_net_amount) FILTER (WHERE year(revenue_month) = 2011) AS non_merch_share_2011
+      FROM mart_revenue_monthly
+    alt_sql: |
+      SELECT SUM(f.line_revenue) FILTER (WHERE NOT p.is_merchandise AND d.calendar_year = 2010) AS non_merch_2010,
+             SUM(f.line_revenue) FILTER (WHERE NOT p.is_merchandise AND d.calendar_year = 2010) / SUM(f.line_revenue) FILTER (WHERE d.calendar_year = 2010) AS non_merch_share_2010,
+             SUM(f.line_revenue) FILTER (WHERE NOT p.is_merchandise AND d.calendar_year = 2011) AS non_merch_2011,
+             SUM(f.line_revenue) FILTER (WHERE NOT p.is_merchandise AND d.calendar_year = 2011) / SUM(f.line_revenue) FILTER (WHERE d.calendar_year = 2011) AS non_merch_share_2011
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key JOIN dim_date d ON f.date_key = d.date_key
+    answer:
+      values: [non_merch_2010, non_merch_share_2010, non_merch_2011, non_merch_share_2011]
+
+  - id: ms-020
+    question: Do UK customers cancel more than customers abroad? Give the 2011 cancellation rate by value (cancelled merchandise divided by gross merchandise sales) for the United Kingdom and for all other countries combined.
+    tags: [cancellations, country, comparison]
+    gold_sql: |
+      SELECT -SUM(f.line_revenue) FILTER (WHERE c.country_name = 'United Kingdom' AND f.line_type = 'cancellation')
+             / SUM(f.line_revenue) FILTER (WHERE c.country_name = 'United Kingdom' AND f.line_type = 'sale') AS uk_rate,
+             -SUM(f.line_revenue) FILTER (WHERE c.country_name <> 'United Kingdom' AND f.line_type = 'cancellation')
+             / SUM(f.line_revenue) FILTER (WHERE c.country_name <> 'United Kingdom' AND f.line_type = 'sale') AS rest_rate
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      JOIN dim_country c ON f.country_key = c.country_key
+      WHERE p.is_merchandise AND year(f.invoice_ts) = 2011
+    alt_sql: |
+      WITH o AS (
+        SELECT c.is_domestic_market AS uk, o.invoice_type, o.merchandise_revenue AS v FROM fct_orders o
+        JOIN dim_country c ON o.country_key = c.country_key
+        WHERE o.invoice_ts >= TIMESTAMP '2011-01-01' AND o.invoice_ts < TIMESTAMP '2012-01-01')
+      SELECT -SUM(v) FILTER (WHERE uk AND invoice_type = 'cancellation') / SUM(v) FILTER (WHERE uk AND invoice_type = 'sale') AS uk_rate,
+             -SUM(v) FILTER (WHERE NOT uk AND invoice_type = 'cancellation') / SUM(v) FILTER (WHERE NOT uk AND invoice_type = 'sale') AS rest_rate
+      FROM o
+    answer:
+      values: [uk_rate, rest_rate]
+
+  - id: ms-021
+    question: Among countries with more than 50,000 pounds of gross merchandise sales in 2011, which one had the highest cancellation rate by value (cancelled merchandise divided by gross merchandise sales), and what was the rate?
+    tags: [cancellations, country, filter]
+    gold_sql: |
+      SELECT c.country_name,
+             -SUM(CASE WHEN f.line_type = 'cancellation' THEN f.line_revenue ELSE 0 END)
+             / SUM(CASE WHEN f.line_type = 'sale' THEN f.line_revenue ELSE 0 END) AS cancellation_rate
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      JOIN dim_country c ON f.country_key = c.country_key
+      WHERE p.is_merchandise AND year(f.invoice_ts) = 2011
+      GROUP BY 1 HAVING SUM(CASE WHEN f.line_type = 'sale' THEN f.line_revenue ELSE 0 END) > 50000
+      ORDER BY cancellation_rate DESC LIMIT 1
+    alt_sql: |
+      WITH s AS (
+        SELECT o.country_key, SUM(o.merchandise_revenue) FILTER (WHERE o.invoice_type = 'sale') AS gross,
+               -SUM(o.merchandise_revenue) FILTER (WHERE o.invoice_type = 'cancellation') AS cancelled
+        FROM fct_orders o WHERE year(o.invoice_ts) = 2011 GROUP BY 1)
+      SELECT c.country_name, s.cancelled / s.gross AS cancellation_rate FROM s
+      JOIN dim_country c ON s.country_key = c.country_key
+      WHERE s.gross > 50000 QUALIFY ROW_NUMBER() OVER (ORDER BY s.cancelled / s.gross DESC) = 1
+    answer:
+      values: [cancellation_rate]
+      entities: [country_name]
+
+  - id: ms-022
+    question: How dependent are we on our very largest customers? What share of total 2011 net merchandise revenue (guest checkouts included in the total) came from the five identified customers with the highest net revenue, and how much was that?
+    tags: [concentration, customers]
+    gold_sql: |
+      WITH c AS (
+        SELECT f.customer_id, SUM(f.line_revenue) AS rev
+        FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+        WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation') AND year(f.invoice_ts) = 2011
+        GROUP BY 1)
+      SELECT (SELECT SUM(rev) FROM (SELECT rev FROM c WHERE customer_id IS NOT NULL ORDER BY rev DESC LIMIT 5)) AS top5_revenue,
+             (SELECT SUM(rev) FROM (SELECT rev FROM c WHERE customer_id IS NOT NULL ORDER BY rev DESC LIMIT 5)) / SUM(rev) AS top5_share
+      FROM c
+    alt_sql: |
+      WITH c AS (
+        SELECT customer_id, SUM(merchandise_revenue) AS rev FROM fct_orders
+        WHERE invoice_type IN ('sale', 'cancellation') AND customer_id IS NOT NULL AND year(invoice_ts) = 2011
+        GROUP BY 1 ORDER BY rev DESC LIMIT 5)
+      SELECT SUM(rev) AS top5_revenue,
+             SUM(rev) / (SELECT ytd_net_revenue FROM mart_revenue_monthly WHERE revenue_month = DATE '2011-12-01') AS top5_share
+      FROM c
+    answer:
+      values: [top5_revenue, top5_share]
+
+  - id: ms-023
+    question: For customers acquired in 2010, how long did it typically take them to come back? Give the median number of days between a customer's first and second order, and how many 2010-acquired customers placed a second order.
+    tags: [repeat-purchase, window-functions]
+    gold_sql: |
+      WITH inv AS (SELECT DISTINCT customer_id, invoice_id, invoice_ts FROM fct_order_lines
+                   WHERE line_type = 'sale' AND customer_id IS NOT NULL),
+      r AS (SELECT customer_id, invoice_ts, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY invoice_ts, invoice_id) AS rn FROM inv),
+      p AS (SELECT a.customer_id, a.invoice_ts AS first_ts, b.invoice_ts AS second_ts
+            FROM r a JOIN r b ON a.customer_id = b.customer_id AND a.rn = 1 AND b.rn = 2)
+      SELECT MEDIAN(date_diff('day', first_ts, second_ts)) AS median_days, COUNT(*) AS repeat_customers
+      FROM p WHERE year(first_ts) = 2010
+    alt_sql: |
+      WITH o AS (
+        SELECT customer_id, invoice_ts,
+               LEAD(invoice_ts) OVER (PARTITION BY customer_id ORDER BY invoice_ts, invoice_id) AS next_ts,
+               ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY invoice_ts, invoice_id) AS rn
+        FROM fct_orders WHERE invoice_type = 'sale' AND customer_id IS NOT NULL)
+      SELECT quantile_cont(datediff('day', invoice_ts, next_ts), 0.5) AS median_days, COUNT(*) AS repeat_customers
+      FROM o WHERE rn = 1 AND next_ts IS NOT NULL AND invoice_ts >= TIMESTAMP '2010-01-01' AND invoice_ts < TIMESTAMP '2011-01-01'
+    answer:
+      values: [median_days, repeat_customers]
+    note: Day differences count calendar-day boundaries crossed (DuckDB date_diff on timestamps).
+
+  - id: ms-024
+    question: How much does the customer-tier history change the picture? For 2010, compare platinum net merchandise revenue measured by the tier customers had at the time of sale with the same figure measured by their current tier, and give the difference.
+    tags: [scd2, tier]
+    gold_sql: |
+      WITH lines AS (
+        SELECT f.line_revenue, f.customer_sk, f.customer_id
+        FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+        WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation') AND year(f.invoice_ts) = 2010),
+      then_ AS (SELECT SUM(l.line_revenue) AS v FROM lines l JOIN dim_customer c ON l.customer_sk = c.customer_sk
+                WHERE c.loyalty_tier = 'platinum'),
+      now_ AS (SELECT SUM(l.line_revenue) AS v FROM lines l JOIN dim_customer c ON l.customer_id = c.customer_id AND c.is_current
+               WHERE c.loyalty_tier = 'platinum')
+      SELECT then_.v AS at_time_of_sale, now_.v AS by_current_tier, now_.v - then_.v AS difference FROM then_, now_
+    alt_sql: |
+      WITH o AS (
+        SELECT o.merchandise_revenue AS v, hist.loyalty_tier AS tier_then, cur.loyalty_tier AS tier_now
+        FROM fct_orders o
+        JOIN dim_customer hist ON o.customer_sk = hist.customer_sk
+        JOIN dim_customer cur ON cur.customer_id = hist.customer_id AND cur.valid_to = TIMESTAMP '9999-12-31'
+        WHERE o.invoice_type IN ('sale', 'cancellation') AND o.invoice_ts >= TIMESTAMP '2010-01-01' AND o.invoice_ts < TIMESTAMP '2011-01-01')
+      SELECT SUM(v) FILTER (WHERE tier_then = 'platinum') AS at_time_of_sale,
+             SUM(v) FILTER (WHERE tier_now = 'platinum') AS by_current_tier,
+             SUM(v) FILTER (WHERE tier_now = 'platinum') - SUM(v) FILTER (WHERE tier_then = 'platinum') AS difference
+      FROM o
+    answer:
+      values: [at_time_of_sale, by_current_tier, difference]
+
+  - id: ms-025
+    question: How exceptional was November 2011? Give its net merchandise revenue, the average monthly net merchandise revenue of January to October 2011, and the ratio between the two.
+    tags: [seasonality, comparison]
+    gold_sql: |
+      SELECT MAX(net_merchandise_revenue) FILTER (WHERE revenue_month = DATE '2011-11-01') AS nov_2011,
+             AVG(net_merchandise_revenue) FILTER (WHERE revenue_month BETWEEN DATE '2011-01-01' AND DATE '2011-10-01') AS avg_jan_oct,
+             MAX(net_merchandise_revenue) FILTER (WHERE revenue_month = DATE '2011-11-01')
+             / AVG(net_merchandise_revenue) FILTER (WHERE revenue_month BETWEEN DATE '2011-01-01' AND DATE '2011-10-01') AS ratio
+      FROM mart_revenue_monthly
+    alt_sql: |
+      WITH m AS (
+        SELECT month(f.invoice_ts) AS mth, SUM(f.line_revenue) AS r
+        FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+        WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation') AND year(f.invoice_ts) = 2011 GROUP BY 1)
+      SELECT MAX(r) FILTER (WHERE mth = 11) AS nov_2011, SUM(r) FILTER (WHERE mth <= 10) / 10 AS avg_jan_oct,
+             MAX(r) FILTER (WHERE mth = 11) / (SUM(r) FILTER (WHERE mth <= 10) / 10) AS ratio
+      FROM m
+    answer:
+      values: [nov_2011, avg_jan_oct, ratio]
+
+  - id: ms-026
+    question: Did the range of merchandise we sell grow or shrink? Give the number of distinct merchandise products sold in 2010 and in 2011.
+    tags: [products, assortment, trend]
+    gold_sql: |
+      SELECT COUNT(DISTINCT f.product_key) FILTER (WHERE year(f.invoice_ts) = 2010) AS products_2010,
+             COUNT(DISTINCT f.product_key) FILTER (WHERE year(f.invoice_ts) = 2011) AS products_2011
+      FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+      WHERE p.is_merchandise AND f.line_type = 'sale'
+    alt_sql: |
+      SELECT (SELECT COUNT(*) FROM dim_product p WHERE p.is_merchandise AND EXISTS (
+                SELECT 1 FROM fct_order_lines f JOIN dim_date d ON f.date_key = d.date_key
+                WHERE f.product_key = p.product_key AND f.line_type = 'sale' AND d.calendar_year = 2010)) AS products_2010,
+             (SELECT COUNT(*) FROM dim_product p WHERE p.is_merchandise AND EXISTS (
+                SELECT 1 FROM fct_order_lines f JOIN dim_date d ON f.date_key = d.date_key
+                WHERE f.product_key = p.product_key AND f.line_type = 'sale' AND d.calendar_year = 2011)) AS products_2011
+    answer:
+      values: [products_2010, products_2011]
+
+  - id: ms-027
+    question: Which three products had the highest cancelled merchandise value in 2011, how much was cancelled for each, and what share of all 2011 merchandise cancellations do the three represent together?
+    tags: [cancellations, products, top-n, share]
+    gold_sql: |
+      WITH c AS (
+        SELECT p.stock_code, p.product_description, -SUM(f.line_revenue) AS cancelled
+        FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+        WHERE p.is_merchandise AND f.line_type = 'cancellation' AND year(f.invoice_ts) = 2011
+        GROUP BY 1, 2)
+      SELECT stock_code, product_description, cancelled,
+             SUM(cancelled) OVER () / (SELECT SUM(cancelled) FROM c) AS top3_share
+      FROM (SELECT * FROM c ORDER BY cancelled DESC LIMIT 3) ORDER BY cancelled DESC
+    alt_sql: |
+      WITH c AS (
+        SELECT f.product_key, -SUM(f.line_revenue) AS cancelled FROM fct_order_lines f
+        WHERE f.line_type = 'cancellation' AND f.invoice_ts >= TIMESTAMP '2011-01-01' AND f.invoice_ts < TIMESTAMP '2012-01-01'
+          AND f.product_key IN (SELECT product_key FROM dim_product WHERE is_merchandise)
+        GROUP BY 1),
+      r AS (SELECT *, ROW_NUMBER() OVER (ORDER BY cancelled DESC) AS rn FROM c)
+      SELECT p.stock_code, p.product_description, r.cancelled,
+             (SELECT SUM(cancelled) FROM r WHERE rn <= 3) / (SELECT -SUM(cancelled_merchandise) FROM mart_revenue_monthly WHERE year(revenue_month) = 2011) AS top3_share
+      FROM r JOIN dim_product p ON r.product_key = p.product_key WHERE rn <= 3 ORDER BY rn
+    answer:
+      values: [{column: cancelled, row: 0}, {column: cancelled, row: 1}, {column: cancelled, row: 2}, top3_share]
+      entities:
+        - {any_of: [stock_code, product_description], row: 0}
+        - {any_of: [stock_code, product_description], row: 1}
+        - {any_of: [stock_code, product_description], row: 2}
+
+  - id: ms-028
+    question: Which single day in November 2011 had the highest net merchandise revenue, how much was it, and how far above that month's average per trading day was it (in pounds)?
+    tags: [daily, peak]
+    gold_sql: |
+      WITH d AS (
+        SELECT CAST(f.invoice_ts AS DATE) AS sales_date, SUM(f.line_revenue) AS rev
+        FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+        WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation')
+          AND f.invoice_ts >= TIMESTAMP '2011-11-01' AND f.invoice_ts < TIMESTAMP '2011-12-01'
+        GROUP BY 1)
+      SELECT sales_date, rev AS best_day_revenue, rev - (SELECT AVG(rev) FROM d) AS above_average
+      FROM d ORDER BY rev DESC LIMIT 1
+    alt_sql: |
+      WITH d AS (
+        SELECT dd.date_day AS sales_date, SUM(f.line_revenue) AS rev FROM fct_order_lines f
+        JOIN dim_date dd ON f.date_key = dd.date_key
+        WHERE dd.year_month = '2011-11' AND f.line_type IN ('sale', 'cancellation')
+          AND f.product_key IN (SELECT product_key FROM dim_product WHERE is_merchandise)
+        GROUP BY 1)
+      SELECT arg_max(sales_date, rev) AS sales_date, MAX(rev) AS best_day_revenue,
+             MAX(rev) - (SELECT net_merchandise_revenue FROM mart_revenue_monthly WHERE revenue_month = DATE '2011-11-01') / COUNT(*) AS above_average
+      FROM d
+    answer:
+      values: [best_day_revenue, above_average]
+      entities: [sales_date]
+
+  - id: ms-029
+    question: Is Dutch revenue concentrated in a few customers? Give 2011 net merchandise revenue from the Netherlands, the number of Dutch customers who bought, and the share of that revenue coming from the single largest customer.
+    tags: [concentration, country]
+    gold_sql: |
+      WITH c AS (
+        SELECT f.customer_id, SUM(f.line_revenue) AS rev
+        FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+        JOIN dim_country co ON f.country_key = co.country_key
+        WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation') AND year(f.invoice_ts) = 2011
+          AND co.country_name = 'Netherlands'
+        GROUP BY 1)
+      SELECT SUM(rev) AS nl_revenue, COUNT(*) AS nl_customers, MAX(rev) / SUM(rev) AS top_customer_share FROM c
+    alt_sql: |
+      WITH c AS (
+        SELECT o.customer_id, SUM(o.merchandise_revenue) AS rev FROM fct_orders o
+        WHERE o.invoice_type IN ('sale', 'cancellation') AND year(o.invoice_ts) = 2011
+          AND o.country_key = (SELECT country_key FROM dim_country WHERE iso_alpha2 = 'NL')
+        GROUP BY 1),
+      r AS (SELECT rev, ROW_NUMBER() OVER (ORDER BY rev DESC) AS rn FROM c)
+      SELECT SUM(rev) AS nl_revenue, COUNT(*) AS nl_customers, SUM(rev) FILTER (WHERE rn = 1) / SUM(rev) AS top_customer_share FROM r
+    answer:
+      values: [nl_revenue, nl_customers, top_customer_share]
+
+  - id: ms-030
+    question: Comparing the first three quarters of 2011 with the same quarters of 2010, which quarter grew most in net merchandise revenue, and what was its growth rate? Give that quarter's two totals.
+    tags: [quarterly, yoy]
+    gold_sql: |
+      WITH q AS (
+        SELECT d.calendar_quarter,
+               SUM(f.line_revenue) FILTER (WHERE d.calendar_year = 2010) AS rev_2010,
+               SUM(f.line_revenue) FILTER (WHERE d.calendar_year = 2011) AS rev_2011
+        FROM fct_order_lines f JOIN dim_product p ON f.product_key = p.product_key
+        JOIN dim_date d ON f.date_key = d.date_key
+        WHERE p.is_merchandise AND f.line_type IN ('sale', 'cancellation') AND d.calendar_quarter <= 3
+          AND d.calendar_year IN (2010, 2011)
+        GROUP BY 1)
+      SELECT 'Q' || calendar_quarter AS best_quarter, rev_2010, rev_2011, rev_2011 / rev_2010 - 1 AS growth
+      FROM q ORDER BY growth DESC LIMIT 1
+    alt_sql: |
+      WITH m AS (
+        SELECT quarter(revenue_month) AS q, year(revenue_month) AS y, SUM(net_merchandise_revenue) AS r
+        FROM mart_revenue_monthly WHERE quarter(revenue_month) <= 3 AND year(revenue_month) IN (2010, 2011) GROUP BY 1, 2)
+      SELECT 'Q' || a.q AS best_quarter, a.r AS rev_2010, b.r AS rev_2011, b.r / a.r - 1 AS growth
+      FROM m a JOIN m b ON a.q = b.q AND a.y = 2010 AND b.y = 2011
+      QUALIFY ROW_NUMBER() OVER (ORDER BY b.r / a.r DESC) = 1
+    answer:
+      values: [rev_2010, rev_2011, growth]
+      entities: [{column: best_quarter, aliases: [third quarter, Q3 2011, July to September]}]

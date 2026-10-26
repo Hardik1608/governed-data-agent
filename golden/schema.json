@@ -1,0 +1,304 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Hardik1608/governed-data-agent/golden/schema.json",
+  "title": "Governed Data Agent golden set file",
+  "type": "object",
+  "required": [
+    "category",
+    "items"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "category": {
+      "enum": [
+        "single_metric",
+        "multi_step",
+        "ambiguous",
+        "unanswerable",
+        "pii",
+        "injection"
+      ]
+    },
+    "items": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/item"
+      }
+    },
+    "plants": {
+      "description": "Prompt-injection test copy only: stock_code -> planted description.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "stock_code",
+          "description"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "stock_code": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 10
+          },
+          "payload_type": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "column": {
+      "type": "string",
+      "pattern": "^[a-z_][a-z0-9_]*$"
+    },
+    "value": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/column"
+        },
+        {
+          "type": "object",
+          "required": [
+            "column"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "column": {
+              "$ref": "#/$defs/column"
+            },
+            "row": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "label": {
+              "type": "string"
+            },
+            "tolerance": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 0.05
+            }
+          }
+        }
+      ]
+    },
+    "entity": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/column"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "column": {
+              "$ref": "#/$defs/column"
+            },
+            "any_of": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/column"
+              },
+              "minItems": 1
+            },
+            "row": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "aliases": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "anyOf": [
+            {
+              "required": [
+                "column"
+              ]
+            },
+            {
+              "required": [
+                "any_of"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "answer": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "values": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/value"
+          }
+        },
+        "entities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/entity"
+          }
+        },
+        "order_matters": {
+          "type": "boolean"
+        }
+      },
+      "anyOf": [
+        {
+          "required": [
+            "values"
+          ]
+        },
+        {
+          "required": [
+            "entities"
+          ]
+        }
+      ]
+    },
+    "item": {
+      "type": "object",
+      "required": [
+        "id",
+        "question"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^(sm|ms|amb|un|pii|inj)-[0-9]{3}$"
+        },
+        "question": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 600
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "gold_sql": {
+          "type": "string",
+          "minLength": 10
+        },
+        "alt_sql": {
+          "type": "string",
+          "minLength": 10
+        },
+        "answer": {
+          "$ref": "#/$defs/answer"
+        },
+        "note": {
+          "type": "string"
+        },
+        "rationale": {
+          "type": "string"
+        },
+        "on_clarification": {
+          "type": "string"
+        },
+        "ambiguity": {
+          "type": "string"
+        },
+        "interpretations": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "required": [
+              "label",
+              "sql"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "label": {
+                "type": "string"
+              },
+              "sql": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "missing": {
+          "type": "string"
+        },
+        "expected_behavior": {
+          "enum": [
+            "mask",
+            "refuse",
+            "mask_or_refuse"
+          ]
+        },
+        "injection": {
+          "type": "object",
+          "required": [
+            "stock_code",
+            "payload_type"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "stock_code": {
+              "type": "string"
+            },
+            "payload_type": {
+              "enum": [
+                "instruction_override",
+                "tool_hijack",
+                "data_poisoning",
+                "pii_exfiltration",
+                "external_access",
+                "role_escalation",
+                "chart_exfiltration",
+                "prompt_leak",
+                "fake_tool_call",
+                "budget_bypass"
+              ]
+            }
+          }
+        },
+        "detect": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "sql_patterns": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "answer_patterns": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "reveal_pii": {
+              "type": "boolean"
+            },
+            "chart_urls": {
+              "type": "boolean"
+            },
+            "tool_arg_patterns": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,82 @@
+{
+ "run": "spider2-qwen35-9b",
+ "modes": {
+  "single_shot": {
+   "n": 135,
+   "correct": 6,
+   "outcomes": {
+    "wrong result": 68,
+    "rejected by the validator": 36,
+    "CANNOT_ANSWER": 18,
+    "SQL error or timeout": 7,
+    "correct": 6
+   },
+   "rejected_by_validator": 36,
+   "rejected_sql_that_sqlite_also_refuses": 36,
+   "statuses": {
+    "ok": 75,
+    "rejected": 36,
+    "cannot_answer": 18,
+    "exec_error": 6
+   },
+   "budget_stops": 0,
+   "budget_stops_still_correct": 0,
+   "latency_p50_s": 6.784,
+   "latency_p95_s": 46.583
+  },
+  "agent": {
+   "n": 135,
+   "correct": 28,
+   "outcomes": {
+    "wrong result": 105,
+    "correct": 28,
+    "no SQL (gave up or budget)": 2
+   },
+   "rejected_by_validator": 0,
+   "rejected_sql_that_sqlite_also_refuses": 0,
+   "statuses": {
+    "budget_exceeded": 81,
+    "answered": 54
+   },
+   "budget_stops": 81,
+   "budget_stops_still_correct": 6,
+   "latency_p50_s": 87.986,
+   "latency_p95_s": 227.797
+  }
+ },
+ "databases": 30,
+ "paired": {
+  "n": 135,
+  "both_correct": 4,
+  "agent_only": [
+   "local007",
+   "local020",
+   "local021",
+   "local023",
+   "local028",
+   "local030",
+   "local035",
+   "local038",
+   "local039",
+   "local040",
+   "local058",
+   "local068",
+   "local130",
+   "local133",
+   "local193",
+   "local197",
+   "local198",
+   "local199",
+   "local202",
+   "local221",
+   "local244",
+   "local274",
+   "local283",
+   "local310"
+  ],
+  "single_shot_only": [
+   "local131",
+   "local195"
+  ]
+ }
+}

@@ -1,0 +1,313 @@
+sample_id,item_id,trial,question,reference_facts,answer,human_label,human_note
+s001,ms-029,2,"Is Dutch revenue concentrated in a few customers? Give 2011 net merchandise revenue from the Netherlands, the number of Dutch customers who bought, and the share of that revenue coming from the single largest customer.","- nl_revenue: 274725.06
+- nl_customers: 8
+- top_customer_share: 0.983532918329329","Based on the data, Dutch revenue in 2011 is highly concentrated:
+
+- **Total net merchandise revenue from the Netherlands in 2011**: £274,725.06 [q1]
+- **Number of Dutch customers who bought**: 8 [q1]
+- **Share from the single largest customer**: 98.35% [q3]
+
+The revenue is extremely concentrated, with one customer (cust_4d34e2e7cbee) generating £270,201.14, which accounts for 98.35% of all Dutch net merchandise revenue in 2011. This indicates that Dutch revenue is indeed highly concentrated in just a few customers, with one customer dominating the market.",,
+s002,ms-009,1,"In 2011, how much net merchandise revenue came from customers who made their first ever purchase in 2011, how much from customers acquired earlier, and how many new customers bought in 2011?","- new_customer_revenue: 1432100.341
+- existing_customer_revenue: 6285482.672
+- new_customers: 1537",Stopped: LLM call budget of 12 reached.,,
+s003,ms-002,2,"Net merchandise revenue in December 2011 is far below November 2011. Give both monthly figures, the value of merchandise cancelled in December 2011, and the date of the last invoice in the data, and explain the drop.","- dec_2011: 440399.56
+- nov_2011: 1427124.54
+- dec_cancelled: -174091.36
+- last_invoice_date: 2011-12-09",Stopped: LLM call budget of 12 reached.,,
+s004,ms-025,3,"How exceptional was November 2011? Give its net merchandise revenue, the average monthly net merchandise revenue of January to October 2011, and the ratio between the two.","- nov_2011: 1427124.54
+- avg_jan_oct: 714570.356
+- ratio: 1.997178483569783","November 2011 was exceptionally strong. Its net merchandise revenue was **£1,427,124.54** [q1], compared to an average monthly net merchandise revenue of **£714,570.36** [q2] for January through October 2011. The ratio between November's revenue and the January-October average is approximately **2.0** [q3], meaning November's revenue was about twice the average of the previous 10 months.",,
+s005,ms-004,0,"Which sales region grew its net merchandise revenue the most in absolute terms from 2010 to 2011 (note that 2011 ends on 9 December), and what were its two annual totals?","- rev_2010: 54468.19
+- rev_2011: 182553.25
+- growth: 128085.06
+- region: Asia Pacific","CANNOT ANSWER: The warehouse does not contain sales data broken down by 'region' (it only contains data by country), and it lacks the necessary granularity to calculate absolute revenue growth per region for the specified period.",,
+s006,ms-027,1,"Which three products had the highest cancelled merchandise value in 2011, how much was cancelled for each, and what share of all 2011 merchandise cancellations do the three represent together?","- cancelled: 168469.6
+- cancelled: 77479.64
+- cancelled: 8724.45
+- top3_share: 0.5556274821191426
+- stock_code, product_description: 23843
+- stock_code, product_description: 23166
+- stock_code, product_description: 22423",CANNOT ANSWER: The warehouse contains invoice-level cancellation data but does not include product-level cancellation details required to identify the top three products by cancelled merchandise value.,,
+s007,ms-028,2,"Which single day in November 2011 had the highest net merchandise revenue, how much was it, and how far above that month's average per trading day was it (in pounds)?","- best_day_revenue: 110623.68
+- above_average: 55734.27461538461
+- sales_date: 2011-11-14","The single day in November 2011 with the highest net merchandise revenue was **Monday, 14 November 2011**, with **£111,958.62** [q1]. This was **£55,953.01** above the month's average daily net merchandise revenue of £56,005.61 [q1].",,
+s008,ms-030,1,"Comparing the first three quarters of 2011 with the same quarters of 2010, which quarter grew most in net merchandise revenue, and what was its growth rate? Give that quarter's two totals.","- rev_2010: 2119058.411
+- rev_2011: 2389441.752
+- growth: 0.12759598300662423
+- best_quarter: Q3","Based on the data:
+
+- **Q1 2011**: £52,988,718.20 (down 6.67% from Q1 2010)
+- **Q2 2011**: £58,838,359.97 (up 1.46% from Q2 2010)
+- **Q3 2011**: £73,061,354.51 (up 12.66% from Q3 2010)
+
+**Q3 2011** grew most in net merchandise revenue, with a **12.66% growth rate**. 
+
+Its two totals were:
+- **Q3 2011 net merchandise revenue**: £73,061,354.51 [q2]
+- **Q3 2010 net merchandise revenue**: £64,849,254.01 [q2]",,
+s009,ms-007,1,"How seasonal is the business? What share of 2010 net merchandise revenue was made in the fourth quarter, and what was the Q4 2010 total?","- q4_2010: 3221677.21
+- q4_share: 0.3526420481158954","Based on the data, the business shows clear seasonality in 2010. The fourth quarter (October, November, December) generated **£3,221,677.21** in net merchandise revenue, which represents **35.26%** of the total 2010 net merchandise revenue of **£9,135,828.32** [q1].
+
+The seasonality pattern is evident from the month-over-month growth trends: revenue peaked in November 2010 at £1,394,601.80 (a 30.46% increase from October), followed by a sharp decline in December to £758,090.50 (a 45.64% drop). This indicates a strong holiday shopping peak in November, with December likely affected by year-end inventory adjustments or post-holiday slowdowns. The first half of the year was relatively flat with moderate fluctuations, while the second half showed accelerating growth leading into the Q4 peak.",,
+s010,ms-013,3,"How many times did a customer move up from the silver tier to the gold tier during 2011, and how many distinct customers did that?","- upgrades: 328
+- customers: 326","CANNOT ANSWER: The warehouse does not contain data on customer tier changes or movements between tiers over time, only the current loyalty tier at the time of each customer version.",,
+s011,ms-009,0,"In 2011, how much net merchandise revenue came from customers who made their first ever purchase in 2011, how much from customers acquired earlier, and how many new customers bought in 2011?","- new_customer_revenue: 1432100.341
+- existing_customer_revenue: 6285482.672
+- new_customers: 1537","In 2011, net merchandise revenue from customers who made their first purchase in 2011 was **£7,717,583.01** [q1], while revenue from customers acquired earlier (before 2011) was **£6,300,225.63** [q1]. There were **1,537 new customers** who made their first purchase in 2011 [q1].",,
+s012,ms-013,0,"How many times did a customer move up from the silver tier to the gold tier during 2011, and how many distinct customers did that?","- upgrades: 328
+- customers: 326","CANNOT ANSWER: The warehouse contains customer loyalty tier history (SCD Type 2) but does not store the specific reason for tier changes, so it cannot determine if a move was due to 'moving up' rather than down or other changes, nor can it filter for the specific event of moving up from silver to gold.",,
+s013,ms-018,2,"Germany or France - which had more orders in 2011, and which had the higher average order value? Give the orders and AOV of both countries.","- orders_germany: 427
+- orders_france: 371
+- aov_germany: 440.36585480093675
+- aov_france: 467.89013477088946","In 2011, **Germany** had more orders (414) compared to France (362). However, **France** had the higher average order value (£486.08) compared to Germany (£464.10).
+
+- **Germany**: 414 orders, £464.10 AOV [q1]
+- **France**: 362 orders, £486.08 AOV [q1]",,
+s014,ms-025,1,"How exceptional was November 2011? Give its net merchandise revenue, the average monthly net merchandise revenue of January to October 2011, and the ratio between the two.","- nov_2011: 1427124.54
+- avg_jan_oct: 714570.356
+- ratio: 1.997178483569783","November 2011 had net merchandise revenue of **£1,427,124.54 [q1]**. The average monthly net merchandise revenue for January to October 2011 was **£714,570.36 [q2]**. The ratio between November 2011 and the January-October average is approximately **2.00 [q3]**, meaning November 2011's revenue was roughly **twice** the average of the previous ten months, indicating it was exceptionally strong.",,
+s015,ms-001,2,"How did net merchandise revenue from the United Kingdom change between November 2010 and November 2011, and which loyalty tier (tier at the time of sale) contributed the largest increase? Give both monthly totals and that tier's change in pounds.","- uk_nov_2010: 1220153.092
+- uk_nov_2011: 1258907.88
+- top_tier_change: 83420.1
+- top_tier: platinum",Stopped: token budget of 80000 reached.,,
+s016,ms-006,0,"How concentrated is revenue among identified customers? What share of 2011 net merchandise revenue from identified customers came from the 100 customers with the highest net revenue, and how much was that in pounds?","- top100_revenue: 3004827.84
+- top100_share: 0.38934830178547764",CANNOT ANSWER: The warehouse does not contain customer names or identifiers required to isolate and sum the net revenue for the top 100 specific customers.,,
+s017,ms-007,0,"How seasonal is the business? What share of 2010 net merchandise revenue was made in the fourth quarter, and what was the Q4 2010 total?","- q4_2010: 3221677.21
+- q4_share: 0.3526420481158954","The business shows strong seasonality, with the fourth quarter of 2010 accounting for **35.3%** of the year's net merchandise revenue. Q4 2010 generated **£3,221,677.21** in net merchandise revenue, while the total for all of 2010 was **£9,135,828.32** [q1].",,
+s018,ms-022,0,"How dependent are we on our very largest customers? What share of total 2011 net merchandise revenue (guest checkouts included in the total) came from the five identified customers with the highest net revenue, and how much was that?","- top5_revenue: 935469.81
+- top5_share: 0.10378854778518203","CANNOT ANSWER: The warehouse does not contain customer names, contact details, or any mechanism to identify or rank specific customers by revenue to determine the top five, as customer data is stored only as anonymous tokens.",,
+s019,ms-008,3,"In 2011, how did the average order value of customers in the platinum tier compare with customers in the bronze tier (tier at the time of sale)? Give both AOVs and the ratio between them.","- aov_platinum: 1128.2391073038773
+- aov_bronze: 225.35903989488773
+- ratio: 5.006407144040515","In 2011, the average order value (AOV) for customers in the platinum tier was **£1,170.62 [q1]**, while for customers in the bronze tier it was **£289.35 [q1]**. The ratio of the platinum AOV to the bronze AOV was approximately **4.05 [q1]**, meaning platinum customers spent about four times more per order than bronze customers.",,
+s020,ms-027,3,"Which three products had the highest cancelled merchandise value in 2011, how much was cancelled for each, and what share of all 2011 merchandise cancellations do the three represent together?","- cancelled: 168469.6
+- cancelled: 77479.64
+- cancelled: 8724.45
+- top3_share: 0.5556274821191426
+- stock_code, product_description: 23843
+- stock_code, product_description: 23166
+- stock_code, product_description: 22423","CANNOT ANSWER: The warehouse contains invoice line data for cancellations but does not store the specific reasons customers give for cancelling, which is required to answer the 'why' portion of the question regarding the drivers of those cancellations.",,
+s021,ms-019,0,"Did non-merchandise lines (postage, fees, adjustments) become a bigger or smaller part of the business? Give the non-merchandise amount and its share of the total net amount for 2010 and for 2011.","- non_merch_2010: -56244.47
+- non_merch_share_2010: -0.006194608795338298
+- non_merch_2011: -33926.32
+- non_merch_share_2011: -0.003778280592250051",Stopped: token budget of 80000 reached.,,
+s022,ms-023,0,"For customers acquired in 2010, how long did it typically take them to come back? Give the median number of days between a customer's first and second order, and how many 2010-acquired customers placed a second order.","- median_days: 70.0
+- repeat_customers: 2561","CANNOT ANSWER: The warehouse does not contain the specific data required to calculate the median time to a second order or the count of customers who placed exactly a second order, as the cohort retention table only provides aggregate retention rates over time intervals without individual order timestamps or counts of specific repeat order occurrences.",,
+s023,ms-014,0,"September 2011 net merchandise revenue grew strongly year over year. Was that driven by more orders or by a higher average order value? Give orders and AOV for September 2010 and September 2011, and the growth rate.","- orders_sep_2010: 1911
+- orders_sep_2011: 1896
+- aov_sep_2010: 440.38
+- aov_sep_2011: 533.41
+- yoy_growth: 0.2017
+- driver: average order value","September 2011 net merchandise revenue grew by 20.17% year over year [q2]. This growth was primarily driven by a higher average order value (AOV), not by more orders. In September 2010, there were 1,911 orders with an AOV of £440.38 [q2]. In September 2011, there were 1,896 orders with an AOV of £533.41 [q2]. The order count decreased by 0.78% [q2], while the AOV increased by 21.12% [q2]. The revenue growth was driven by customers spending more per order rather than ordering more frequently.",,
+s024,ms-012,2,"The bronze tier's 2011 cancellation rate by value (cancelled merchandise divided by gross merchandise sales, tier at the time of sale) is much higher than the other tiers. What is it, and which two cancellation invoices explain most of it? Give their combined value.","- bronze_rate: 0.22115318389113084
+- top2_value: 245653.2
+- invoice_a: C541433
+- invoice_b: C581484",CANNOT ANSWER: The warehouse contains loyalty tier history but lacks the specific customer-level data needed to identify the exact invoices responsible for the cancellation rate anomaly within the bronze tier for 2011.,,
+s025,ms-001,0,"How did net merchandise revenue from the United Kingdom change between November 2010 and November 2011, and which loyalty tier (tier at the time of sale) contributed the largest increase? Give both monthly totals and that tier's change in pounds.","- uk_nov_2010: 1220153.092
+- uk_nov_2011: 1258907.88
+- top_tier_change: 83420.1
+- top_tier: platinum","The net merchandise revenue from the United Kingdom increased from **£1,220,153.09** in November 2010 to **£1,258,907.88** in November 2011, a total increase of **£38,754.79** [q3].
+
+The loyalty tier that contributed the largest increase was **platinum**, which grew by **£83,420.10** (from £178,430.33 in November 2010 to £261,850.43 in November 2011) [q3].",,
+s026,ms-021,2,"Among countries with more than 50,000 pounds of gross merchandise sales in 2011, which one had the highest cancellation rate by value (cancelled merchandise divided by gross merchandise sales), and what was the rate?","- cancellation_rate: 0.07332782374553333
+- country_name: Spain","Among countries with more than £50,000 in gross merchandise sales in 2011, **Spain** had the highest cancellation rate by value at **7.33%** (cancelled merchandise: £3,959.91 / gross merchandise sales: £54,002.83). The United Kingdom had the highest gross sales (£8,019,210.82) but a lower cancellation rate of 5.35%.",,
+s027,ms-026,2,Did the range of merchandise we sell grow or shrink? Give the number of distinct merchandise products sold in 2010 and in 2011.,"- products_2010: 3976
+- products_2011: 3723","The range of merchandise products sold **shrank** between 2010 and 2011. In 2010, we sold **3,976** distinct merchandise products [q1], while in 2011, that number decreased to **3,723** distinct merchandise products [q1].",,
+s028,ms-020,3,Do UK customers cancel more than customers abroad? Give the 2011 cancellation rate by value (cancelled merchandise divided by gross merchandise sales) for the United Kingdom and for all other countries combined.,"- uk_rate: 0.0534653869892404
+- rest_rate: 0.020382607149992772","In 2011, UK customers had a cancellation rate by value of 5.35% [q1], while customers abroad had a cancellation rate by value of 2.04% [q1]. Yes, UK customers cancel more than customers abroad—the UK cancellation rate is more than double that of all other countries combined.",,
+s029,ms-008,0,"In 2011, how did the average order value of customers in the platinum tier compare with customers in the bronze tier (tier at the time of sale)? Give both AOVs and the ratio between them.","- aov_platinum: 1128.2391073038773
+- aov_bronze: 225.35903989488773
+- ratio: 5.006407144040515","In 2011, the average order value (AOV) for customers in the platinum tier was **£898.23**, while for customers in the bronze tier it was **£197.28**. The platinum tier AOV was **4.55 times** higher than the bronze tier AOV.",,
+s030,ms-005,0,"Excluding the United Kingdom, which three countries added the most net merchandise revenue in 2011 compared with 2010, and how much did each add?","- added: 105737.9
+- added: 58740.32
+- added: 23025.11
+- country_name: Australia
+- country_name: France
+- country_name: Spain","Based on the data, excluding the United Kingdom, the three countries that added the most net merchandise revenue in 2011 compared with 2010 are:
+
+1. **Australia** added £105,737.90 [q1]
+2. **France** added £58,740.32 [q1]
+3. **Spain** added £23,025.11 [q1]
+
+These figures represent the increase in net merchandise revenue from 2010 to 2011 for each non-UK country, calculated as the difference between 2011 revenue and 2010 revenue.",,
+s031,ms-016,3,Is the share of net merchandise revenue from guest checkouts (orders without a customer account) growing? Give the guest share for 2010 and for 2011.,"- guest_share_2010: 0.1262502149881686
+- guest_share_2011: 0.14374924260692112",CANNOT ANSWER: The warehouse does not contain data on guest checkouts (orders without a customer account) as it only tracks orders linked to specific customer IDs and loyalty tiers.,,
+s032,ms-003,3,Net merchandise revenue fell from March to April 2011. Break the change down into the number of orders and the average order value for both months. Which of the two fell more in percentage terms?,"- orders_mar: 1531
+- orders_apr: 1318
+- aov_mar: 443.72
+- aov_apr: 365.75
+- fell_more: average order value","Net merchandise revenue fell from £679,329.21 in March 2011 to £482,061.93 in April 2011. The number of orders fell from 1,531 to 1,318, and the average order value fell from £443.72 to £365.75. In percentage terms, revenue fell by 29.04%, orders fell by 13.91%, and average order value fell by 17.57%. Therefore, net merchandise revenue fell more in percentage terms than both orders and average order value.",,
+s033,ms-021,0,"Among countries with more than 50,000 pounds of gross merchandise sales in 2011, which one had the highest cancellation rate by value (cancelled merchandise divided by gross merchandise sales), and what was the rate?","- cancellation_rate: 0.07332782374553333
+- country_name: Spain","Among countries with more than £50,000 of gross merchandise sales in 2011, Spain had the highest cancellation rate by value at 7.33% (cancelled merchandise of £3,959.91 divided by gross merchandise sales of £54,002.83) [q1].",,
+s034,ms-015,3,Which day of the week had the highest average order value in 2011 and which had the lowest? Give both AOVs.,"- best_aov: 517.119406142365
+- worst_aov: 358.64744688109164
+- best_day: Tuesday
+- worst_day: Sunday","Based on the data for 2011, **Sunday** had the lowest average order value at **£358.65 [q1]**, while **Tuesday** had the highest average order value at **£517.12 [q1]**.",,
+s035,ms-022,2,"How dependent are we on our very largest customers? What share of total 2011 net merchandise revenue (guest checkouts included in the total) came from the five identified customers with the highest net revenue, and how much was that?","- top5_revenue: 935469.81
+- top5_share: 0.10378854778518203","In 2011, the five customers with the highest net merchandise revenue generated £2,108,853.35, which represents 23.4% of the total 2011 net merchandise revenue of £9,013,227.66 [q1]. This indicates a moderate dependency on these top customers, with nearly a quarter of all net revenue coming from just five customers.",,
+s036,ms-012,0,"The bronze tier's 2011 cancellation rate by value (cancelled merchandise divided by gross merchandise sales, tier at the time of sale) is much higher than the other tiers. What is it, and which two cancellation invoices explain most of it? Give their combined value.","- bronze_rate: 0.22115318389113084
+- top2_value: 245653.2
+- invoice_a: C541433
+- invoice_b: C581484","CANNOT ANSWER: The warehouse contains cancellation rates by value aggregated at the order level and does not store the specific reason customers give for cancelling, which is required to identify the two specific invoices driving the high rate for the bronze tier.",,
+s037,ms-023,2,"For customers acquired in 2010, how long did it typically take them to come back? Give the median number of days between a customer's first and second order, and how many 2010-acquired customers placed a second order.","- median_days: 70.0
+- repeat_customers: 2561","CANNOT ANSWER: The warehouse does not contain data on customer names, emails, phone numbers, or specific order timestamps required to calculate the median days between first and second orders for a specific cohort.",,
+s038,ms-011,0,"Cancelled merchandise in January 2011 was unusually high. How much was cancelled that month, which single cancellation invoice accounts for most of it, and what was that invoice's value?","- jan_cancelled: -91525.05
+- invoice_value: -77183.6
+- invoice_id: C541433",CANNOT ANSWER: The warehouse contains aggregated cancellation revenue by month but does not store individual invoice-level cancellation details or specific invoice values required to identify the single largest cancellation invoice for January 2011.,,
+s039,ms-030,0,"Comparing the first three quarters of 2011 with the same quarters of 2010, which quarter grew most in net merchandise revenue, and what was its growth rate? Give that quarter's two totals.","- rev_2010: 2119058.411
+- rev_2011: 2389441.752
+- growth: 0.12759598300662423
+- best_quarter: Q3","Now I have all the numbers properly computed in SQL. Let me analyze the results for the first three quarters:
+
+**Q1 2010:** £2,119,058.41 → Q1 2011: £2,389,441.75 (growth: +12.76%, difference: £270,383.34)
+**Q2 2010:** £1,912,824.54 → Q2 2011: £1,936,911.84 (growth: +1.26%, difference: £24,087.30)
+**Q3 2010:** £1,882,268.16 → Q3 2011: £1,757,648.75 (growth: -6.62%, difference: -£124,619.41)
+
+The quarter with the highest YoY growth among Q1-Q3 2011 is **Q1 2011**.
+
+**Final Answer:**
+
+The quarter that grew most in net merchandise revenue comparing Q1-Q3 2011 to the same quarters of 2010 is **Q1 2011**, with a growth rate of **+12.76%**.
+
+The two totals for Q1 2011 are:
+- **Q1 2010:** £2,119,058.41 [q3]
+- **Q1 2011:** £2,389,441.75 [q3]
+
+This represents the strongest year-over-year performance among the first three quarters of 2011, with revenue increasing by £270,383.34 compared to Q1 2010 [q3].",,
+s040,ms-018,3,"Germany or France - which had more orders in 2011, and which had the higher average order value? Give the orders and AOV of both countries.","- orders_germany: 427
+- orders_france: 371
+- aov_germany: 440.36585480093675
+- aov_france: 467.89013477088946","In 2011, Germany had more orders (560) than France (437). However, France had a higher average order value (£467.89) compared to Germany (£440.37).",,
+s041,ms-026,3,Did the range of merchandise we sell grow or shrink? Give the number of distinct merchandise products sold in 2010 and in 2011.,"- products_2010: 3976
+- products_2011: 3723","The range of merchandise products sold **shrank** from 2010 to 2011.
+
+- In 2010, there were **3,976** distinct merchandise products sold [q2].
+- In 2011, there were **3,723** distinct merchandise products sold [q2].
+- The change was **-253** distinct products [q2].
+- The percentage change was **-6.36%** [q2].",,
+s042,ms-002,3,"Net merchandise revenue in December 2011 is far below November 2011. Give both monthly figures, the value of merchandise cancelled in December 2011, and the date of the last invoice in the data, and explain the drop.","- dec_2011: 440399.56
+- nov_2011: 1427124.54
+- dec_cancelled: -174091.36
+- last_invoice_date: 2011-12-09","Let me recalculate the numbers properly, citing only what appears in the query results.
+
+**Net merchandise revenue:**
+- November 2011: £1,427,124.54 [q1]
+- December 2011: £440,399.56 [q1]
+
+**Merchandise cancelled in December 2011:** £174,091.36 (negative value) [q1]
+
+**Last invoice date in the data:** 2011-12-09 [q3]
+
+**Explanation of the drop:**
+The drop from November to December is primarily due to:
+
+1. **Partial month effect:** December 2011 data ends on 2011-12-09 [q1], meaning only 9 days of data instead of a full month. This is confirmed by the `is_partial_month` flag being true for December [q1].
+
+2. **Substantially higher cancellations:** December had £174,091.36 in cancelled merchandise compared to £24,991.44 in November [q1], representing a 6.97x increase in cancellation value.
+
+3. **Fewer orders:** November had 2,884 orders while December only had 839 orders [q4, q5], reflecting both the partial month and lower activity.
+
+The combination of the truncated December period (only 9 days) and a 6.97x increase in cancellation value explains the 69% drop in net merchandise revenue.",,
+s043,ms-024,3,"How much does the customer-tier history change the picture? For 2010, compare platinum net merchandise revenue measured by the tier customers had at the time of sale with the same figure measured by their current tier, and give the difference.","- at_time_of_sale: 1645197.98
+- by_current_tier: 2767022.123
+- difference: 1121824.143","For 2010, the net merchandise revenue from customers who were **platinum at the time of sale** was **£1,695,465.67 [q2]**, while the same figure measured by their **current tier** (as of the end of the data window) was **£2,857,092.13 [q2]**.
+
+The difference is **-£1,161,626.46 [q2]**, meaning that using the current tier instead of the tier at the time of sale **overstates** the platinum net merchandise revenue for 2010 by £1,161,626.46. This occurs because some customers who were platinum in 2010 had their tier downgraded later, and their 2010 revenue is incorrectly attributed to a lower tier when using the current tier.",,
+s044,ms-029,1,"Is Dutch revenue concentrated in a few customers? Give 2011 net merchandise revenue from the Netherlands, the number of Dutch customers who bought, and the share of that revenue coming from the single largest customer.","- nl_revenue: 274725.06
+- nl_customers: 8
+- top_customer_share: 0.983532918329329","Based on the data from the warehouse, Dutch net merchandise revenue in 2011 was **£274,725.06** from **8 customers**. The single largest customer accounted for **£270,201.14** of that revenue, representing **98.35%** of total Dutch net merchandise revenue [q3].
+
+The remaining 7 customers contributed £4,523.92 (calculated as 274,725.06 - 270,201.14), which is 1.65% of the total. However, since these derived numbers do not appear directly in any query result, I will remove them from the final answer.",,
+s045,ms-005,2,"Excluding the United Kingdom, which three countries added the most net merchandise revenue in 2011 compared with 2010, and how much did each add?","- added: 105737.9
+- added: 58740.32
+- added: 23025.11
+- country_name: Australia
+- country_name: France
+- country_name: Spain","Excluding the United Kingdom, the three countries that added the most net merchandise revenue in 2011 compared with 2010 are:
+
+1. **Australia** added £106,675.50 [q2] (net revenue grew from £29,309.40 in 2010 to £135,984.90 in 2011)
+2. **France** added £60,838.41 [q2] (net revenue grew from £106,357.56 in 2010 to £167,195.97 in 2011)
+3. **Spain** added £24,485.41 [q2] (net revenue grew from £25,314.08 in 2010 to £49,799.49 in 2011)
+
+These figures represent the increase in net merchandise revenue (sales minus cancellations, in GBP) for each country between the full year 2010 and the full year 2011.",,
+s046,ms-028,0,"Which single day in November 2011 had the highest net merchandise revenue, how much was it, and how far above that month's average per trading day was it (in pounds)?","- best_day_revenue: 110623.68
+- above_average: 55734.27461538461
+- sales_date: 2011-11-14","The single day in November 2011 with the highest net merchandise revenue was **14 November 2011**, with **£110,623.68** [q1]. This was **£55,734.27** above the month's average per trading day of £54,889.41 [q2, q3].",,
+s047,ms-006,1,"How concentrated is revenue among identified customers? What share of 2011 net merchandise revenue from identified customers came from the 100 customers with the highest net revenue, and how much was that in pounds?","- top100_revenue: 3004827.84
+- top100_share: 0.38934830178547764",CANNOT ANSWER: The warehouse contains aggregated order-level revenue but does not store the individual customer-level net revenue required to identify the top 100 customers or calculate their specific share of total revenue.,,
+s048,ms-014,1,"September 2011 net merchandise revenue grew strongly year over year. Was that driven by more orders or by a higher average order value? Give orders and AOV for September 2010 and September 2011, and the growth rate.","- orders_sep_2010: 1911
+- orders_sep_2011: 1896
+- aov_sep_2010: 440.38
+- aov_sep_2011: 533.41
+- yoy_growth: 0.2017
+- driver: average order value","Based on the certified metrics from the warehouse:
+
+**September 2010:** 1,911 orders, AOV £440.38 [q2]
+**September 2011:** 1,896 orders, AOV £533.41 [q2]
+
+The September 2011 net merchandise revenue growth of 20.17% year-over-year was **driven by a higher average order value**, not more orders. The number of orders decreased (from 1,911 to 1,896), while the AOV increased (from £440.38 to £533.41), which explains the strong YoY revenue growth.",,
+s049,ms-017,0,"Compare six-month retention of the December 2009 and December 2010 acquisition cohorts. Give both retention rates and cohort sizes, and say whether the comparison is fair.","- retention_dec_2009: 0.377
+- size_dec_2009: 955
+- retention_dec_2010: 0.0526
+- size_dec_2010: 76","The December 2009 acquisition cohort had a size of 955 customers and a six-month retention rate of 37.7% [q1]. The December 2010 cohort was much smaller, with only 76 customers, and a six-month retention rate of 5.3% [q2].
+
+This comparison is not entirely fair because the cohorts differ substantially in size (955 vs. 76 customers), which may reflect different market conditions, customer acquisition strategies, or data completeness issues (the 2009 cohort is left-censored, meaning it includes customers whose history predates the data window). The much lower retention rate in 2010 could be due to a smaller, possibly less engaged cohort rather than a true decline in retention performance.",,
+s050,ms-004,1,"Which sales region grew its net merchandise revenue the most in absolute terms from 2010 to 2011 (note that 2011 ends on 9 December), and what were its two annual totals?","- rev_2010: 54468.19
+- rev_2011: 182553.25
+- growth: 128085.06
+- region: Asia Pacific","The sales region that grew its net merchandise revenue the most in absolute terms from 2010 to 2011 is **Asia Pacific**, with an absolute growth of **£128,085.06**. Its two annual totals were **£54,468.19** in 2010 and **£182,553.25** in 2011 (partial year ending 9 December). [q1]",,
+s051,ms-003,0,Net merchandise revenue fell from March to April 2011. Break the change down into the number of orders and the average order value for both months. Which of the two fell more in percentage terms?,"- orders_mar: 1531
+- orders_apr: 1318
+- aov_mar: 443.72
+- aov_apr: 365.75
+- fell_more: average order value",Stopped: LLM call budget of 12 reached.,,
+s052,ms-020,1,Do UK customers cancel more than customers abroad? Give the 2011 cancellation rate by value (cancelled merchandise divided by gross merchandise sales) for the United Kingdom and for all other countries combined.,"- uk_rate: 0.0534653869892404
+- rest_rate: 0.020382607149992772","In 2011, UK customers had a cancellation rate by value of **5.35%** (428,750.21 GBP in cancelled merchandise divided by 8,019,210.82 GBP in gross merchandise sales), while customers abroad had a cancellation rate by value of **2.04%** (29,603.09 GBP in cancelled merchandise divided by 1,452,370.14 GBP in gross merchandise sales). Yes, UK customers cancel more than customers abroad—the UK cancellation rate is more than double that of other countries.",,
+s053,ms-010,3,"Which product's net merchandise revenue grew the most from November 2010 to November 2011, and what did it make in each of the two months?","- nov_2010: 0.0
+- nov_2011: 34343.77
+- stock_code, product_description: 23084",CANNOT ANSWER: The warehouse does not contain product-level net merchandise revenue broken down by specific months (November 2010 and November 2011); it only provides monthly aggregates in mart_revenue_monthly and product-level data in fct_order_lines which would require complex aggregation not guaranteed to be pre-calculated for that specific comparison.,,
+s054,ms-015,1,Which day of the week had the highest average order value in 2011 and which had the lowest? Give both AOVs.,"- best_aov: 517.119406142365
+- worst_aov: 358.64744688109164
+- best_day: Tuesday
+- worst_day: Sunday","Now I have the correct AOV values by day of the week for 2011:
+
+- Monday: £395.21
+- Tuesday: £409.37
+- Wednesday: £364.27
+- Thursday: £376.16
+- Friday: £366.22
+- Sunday: £333.01
+
+The highest AOV was on **Tuesday** at **£409.37** [q4], and the lowest AOV was on **Sunday** at **£333.01** [q4].",,
+s055,ms-024,1,"How much does the customer-tier history change the picture? For 2010, compare platinum net merchandise revenue measured by the tier customers had at the time of sale with the same figure measured by their current tier, and give the difference.","- at_time_of_sale: 1645197.98
+- by_current_tier: 2767022.123
+- difference: 1121824.143","For 2010, the net merchandise revenue measured by the customer tier **at the time of sale** was **£9,135,828.32**, while the same figure measured by their **current tier** (as of end of 2010) was **£7,982,428.03**. The difference is **£1,153,400.29** [q1], meaning the historical tier attribution shows £1.15M more revenue than the current tier attribution.
+
+The breakdown by tier shows:
+- **Platinum**: £1,645,197.98 (historical) vs £2,767,022.12 (current), a difference of **-£1,121,824.14** (current tier shows more revenue)
+- **Gold**: £1,620,009.22 (historical) vs £2,347,863.31 (current), a difference of **-£727,854.09** (current tier shows more revenue)
+- **Silver**: £2,906,285.11 (historical) vs £2,214,982.77 (current), a difference of **+£691,302.34** (historical tier shows more revenue)
+- **Bronze**: £1,810,935.73 (historical) vs £652,559.83 (current), a difference of **+£1,158,375.89** (historical tier shows more revenue)
+- **Unknown**: £1,153,400.29 (historical) vs 0 (current), a difference of **+£1,153,400.29** (historical tier shows more revenue)
+
+The net effect is that using historical tiers attributes £1.15M more revenue to 2010 than using current tiers, primarily because many customers who were bronze, silver, or unknown at the time of their 2010 purchases had upgraded to gold or platinum by the end of 2010.",,
+s056,ms-011,3,"Cancelled merchandise in January 2011 was unusually high. How much was cancelled that month, which single cancellation invoice accounts for most of it, and what was that invoice's value?","- jan_cancelled: -91525.05
+- invoice_value: -77183.6
+- invoice_id: C541433","CANNOT ANSWER: The warehouse contains invoice-level cancellation data but does not store the specific reasons customers give for cancelling, which are required to identify the single invoice responsible for the highest cancellation amount or its specific value.",,
+s057,ms-016,0,Is the share of net merchandise revenue from guest checkouts (orders without a customer account) growing? Give the guest share for 2010 and for 2011.,"- guest_share_2010: 0.1262502149881686
+- guest_share_2011: 0.14374924260692112","CANNOT ANSWER: The warehouse does not contain data distinguishing guest checkouts from registered customer accounts, as customer_id and customer_sk are present for all orders without a specific guest flag.",,
+s058,ms-017,2,"Compare six-month retention of the December 2009 and December 2010 acquisition cohorts. Give both retention rates and cohort sizes, and say whether the comparison is fair.","- retention_dec_2009: 0.377
+- size_dec_2009: 955
+- retention_dec_2010: 0.0526
+- size_dec_2010: 76","The December 2009 acquisition cohort had a six-month retention rate of **37.7%** (360 active customers out of 955 cohort members) [q1], while the December 2010 cohort had a six-month retention rate of **5.3%** (4 active customers out of 76 cohort members) [q2].
+
+**Comparison fairness**: The comparison is **not fair** because the cohort sizes are dramatically different (955 vs. 76 customers). The December 2009 cohort is a ""left-censored"" cohort (first cohort in the data window), meaning it includes all customers whose first purchase was before the data started, making it artificially large and potentially unrepresentative of typical acquisition behavior. The December 2010 cohort is a normal cohort within the data window. This size disparity and the left-censored nature of the 2009 cohort make direct comparison misleading.",,
+s059,ms-010,0,"Which product's net merchandise revenue grew the most from November 2010 to November 2011, and what did it make in each of the two months?","- nov_2010: 0.0
+- nov_2011: 34343.77
+- stock_code, product_description: 23084","CANNOT ANSWER: The warehouse does not contain product-level revenue aggregated by month; it only provides product details and invoice lines, requiring a complex aggregation that may not be directly supported or efficient without a specific product filter, and more importantly, the question asks for a comparison of growth 'from' one month 'to' another which implies a time-series aggregation per product that the provided catalog structure (fct_order_lines and fct_orders) does not directly support as a pre-aggreg",,
+s060,ms-019,1,"Did non-merchandise lines (postage, fees, adjustments) become a bigger or smaller part of the business? Give the non-merchandise amount and its share of the total net amount for 2010 and for 2011.","- non_merch_2010: -56244.47
+- non_merch_share_2010: -0.006194608795338298
+- non_merch_2011: -33926.32
+- non_merch_share_2011: -0.003778280592250051","For 2010, the non-merchandise amount was **-£56,244.47** (a net reduction), representing **-0.62%** of the total net amount of **£9,079,583.85**. For 2011, the non-merchandise amount was **-£33,926.32**, representing **-0.38%** of the total net amount of **£8,979,301.34**.
+
+The non-merchandise part became a **smaller** (less negative) part of the business in 2011 compared to 2010. The share of non-merchandise in total net amount decreased from -0.62% in 2010 to -0.38% in 2011, indicating a smaller negative impact from non-merchandise lines (postage, fees, adjustments) in 2011.",,
