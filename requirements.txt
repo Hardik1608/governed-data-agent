@@ -7,7 +7,7 @@ langgraph-checkpoint-sqlite==3.1.2
 langchain-core==1.6.10
 mcp==2.3.0
 mcp-types==2.3.0
-mlflow==3.17.1
+mlflow==3.17.2
 fastapi==0.143.0
 starlette==1.8.0
 uvicorn==0.54.0
