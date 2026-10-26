@@ -137,7 +137,11 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with: {persist-credentials: false}
-      - run: mkdir -p data/state && echo '{"tokens": []}' > data/state/tokens.json && docker compose config -q
+      - name: Compose config is valid
+        run: |
+          mkdir -p data/state
+          echo '{"tokens": []}' > data/state/tokens.json
+          docker compose config -q
       - run: docker build -t governed-data-agent:ci .
       - name: Image smoke test (CLI loads, non-root)
         run: |
